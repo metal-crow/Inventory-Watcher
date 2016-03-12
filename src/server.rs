@@ -72,7 +72,7 @@ fn add_items_to_inventory(request: &mut Request, pool: &my::Pool) -> IronResult<
         for i in items.iter() {
             match stmt.execute((&i.item_name, i.quantity, &i.description)) {
             	Ok(_) => continue,
-            	Err(err) => errors.push(err.description().to_string()),
+            	Err(err) => errors.push(err.to_string()),
             }
         }
     }
