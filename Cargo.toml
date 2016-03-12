@@ -12,3 +12,8 @@ name = "hello_world"
 iron = "*"
 rustc-serialize = "*"
 router = "*"
+
+[dependencies.mysql]
+mysql = "*"
+default-features = false
+features = ["pipe"]
