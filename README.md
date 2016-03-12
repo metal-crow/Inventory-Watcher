@@ -1,12 +1,14 @@
-##TESING-WIP-LEARNING RUST
+##Know Rust? You'll hate this!
 
-install Rust x64
-install MSYS2
--mingw-w64-x86_64-gcc, add C:\MSYS64\mingw64\bin to PATH
--install mingw-w64-x86_64-openssl
+An inventory manager for the CSH research room. Keeps track of parts and their current quantity.  
+Used this as an excuse to learn Rust.  
 
-behind webauth
-
-
-store the name of the item
-quantity
+Windows Setup:  
+ * install Rust x64
+ * install MSYS2
+  * mingw-w64-x86_64-gcc, add C:\MSYS64\mingw64\bin to PATH
+  * install mingw-w64-x86_64-openssl
+ * MySQL
+ 
+###ToDo 
+behind webauth  

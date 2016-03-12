@@ -1,12 +1,12 @@
 [package]
 
-name = "hello_world"
+name = "inventory_watcher"
 version = "0.0.1"
-authors = [ "Your name <you@example.com>" ]
+authors = [ "Giovanni Frank Crisanti <you@example.com>" ]
 
 [[bin]]
 
-name = "hello_world"
+name = "server"
 
 [dependencies]
 iron = "*"
@@ -14,6 +14,5 @@ rustc-serialize = "*"
 router = "*"
 
 [dependencies.mysql]
-mysql = "*"
 default-features = false
 features = ["pipe"]

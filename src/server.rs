@@ -9,6 +9,7 @@ use router::Router;
 use std::io::Read;
 use rustc_serialize::json;
 use mysql as my;
+use std::error::Error;
 
 //struct in database
 #[derive(Debug, PartialEq, Eq)]
@@ -54,20 +55,43 @@ fn get_item_info(request: &mut Request, pool: &my::Pool) -> IronResult<Response>
     Ok(Response::with((status::Ok, payload)))
 }
 
-// Receive a message by POST and play it back.
-fn add_item_to_inventory(request: &mut Request, pool: &my::Pool) -> IronResult<Response> {
-    Ok(Response::with(status::Ok))
+fn add_items_to_inventory(request: &mut Request, pool: &my::Pool) -> IronResult<Response> {
+	//takes json array of Items
+	let mut payload = String::new();
+    request.body.read_to_string(&mut payload).unwrap();
+    let items: Vec<Item> = match json::decode(&payload) {
+    	Ok(i) => i,
+    	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
+    };
+
+	//allow execute of valid comands, but report errors
+	let mut errors: Vec<String> = Vec::new();
+
+	//insert into database
+	for mut stmt in pool.prepare(r"INSERT into test.inventory (item_name,quantity,description) VALUES (?,?,?)").into_iter() {
+        for i in items.iter() {
+            match stmt.execute((&i.item_name, i.quantity, &i.description)) {
+            	Ok(_) => continue,
+            	Err(err) => errors.push(err.description().to_string()),
+            }
+        }
+    }
+
+	//take any errors, convert to json, and return
+    let payload = json::encode(&errors).unwrap();
+
+    Ok(Response::with((status::Ok, payload)))
 }
 
 fn main() {
 	let pool = my::Pool::new("mysql://root:test@localhost:3306").unwrap();
-	let pool_clone = pool.clone();
+	let pool_clone = pool.clone();//what/why?
 
 	let mut router = Router::new();
 	
     router.post("/ItemInfo", move |r: &mut Request| get_item_info(r, &pool));
     
-    router.post("/ItemAdd" , move |r: &mut Request| add_item_to_inventory(r, &pool_clone));
+    router.post("/ItemAdd" , move |r: &mut Request| add_items_to_inventory(r, &pool_clone));
         
     Iron::new(router).http("localhost:3000").unwrap();
     println!("On 3000");
