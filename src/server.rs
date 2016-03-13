@@ -9,6 +9,7 @@ use router::Router;
 use std::io::Read;
 use rustc_serialize::json;
 use std::error::Error;
+use std::sync::Arc;
 
 //struct in database
 #[derive(Debug, PartialEq, Eq)]
@@ -18,6 +19,13 @@ struct Item {
     quantity: i32,
     description: Option<String>,
 }
+
+impl Item {
+	fn new(item_name : String, quantity: i32, description: Option<String>) -> Item {
+		Item{ item_name: item_name, quantity: quantity, description: description }
+	}
+}
+
 static MYSQL_DB_COLS: &'static str = "item_name,quantity,description";
 
 struct DatabaseManager{
@@ -32,12 +40,13 @@ impl DatabaseManager {
 			Err(err) => return Err(err),
 		};
 		
-		let selected_items: Result<Vec<Item>, _> = statement.execute(()).map(|result| {
+		let selected_items: Result<Vec<Item>, mysql::Error> = statement.execute(()).map(|result| {
 	    	// In this closure we sill map `QueryResult` to `Vec`
 	        // `QueryResult` is iterator over `MyResult<row, err>` so first call to `map`
 	        // will map each `MyResult` to contained `row` (no proper error handling)
 	        // and second call to `map` will map each `row` to `Payment`
 	        result.map(|x| x.unwrap()).map(|row| {
+	        	//TODO there should be a better way to do this	
 	            let (item_name, quantity, description) = mysql::from_row(row);
 	            Item {
 	                item_name: item_name,
@@ -89,7 +98,7 @@ fn get_item_info(request: &mut Request, database_manager : &DatabaseManager) -> 
     
     let selected_items = match 
     database_manager.results_from_database(
-    	format!("SELECT {0} from test.inventory WHERE item_name={1}",MYSQL_DB_COLS, request.item_name)
+    	format!("SELECT * from test.inventory WHERE item_name=\"{0}\"", request.item_name)
     ) 
     {
     	Ok(s_i) => s_i,
@@ -119,46 +128,45 @@ fn add_items_to_inventory(request: &mut Request, database_manager : &DatabaseMan
 }
 
 //json request format for search_for_item
-/*#[derive(RustcEncodable, RustcDecodable)]
+#[derive(RustcEncodable, RustcDecodable)]
 struct SearchItemRequest {
     item_name: String,//find any item name that contains this
     description: Option<String>,//or any item description that contains this
 }
-fn search_for_item(request: &mut Request) -> IronResult<Response> {
+fn search_for_item(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
-    let item_info: SearchItemRequest = match json::decode(&payload) {
+    let item_request: SearchItemRequest = match json::decode(&payload) {
     	Ok(i) => i,
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
     };
     
-	let mut statement = pool.prepare(format!("SELECT {0} from test.inventory WHERE item_name=?",MYSQL_DB_COLS));
+    let selected_items = match 
+    database_manager.results_from_database(
+    	format!("SELECT * from test.inventory WHERE item_name LIKE \"%{0}%\"", item_request.item_name)
+    ) 
+    {
+    	Ok(s_i) => s_i,
+    	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
+    };
     
-    let results: Vec<Item> = statement.execute((item_info.item_name))    
-    .map(|result| {
-        result.map(|x| x.unwrap()).map(|row| {
-            let (item_name, quantity, description) = mysql::from_row(row);
-            Item {
-                item_name: item_name,
-                quantity: quantity,
-                description: description,
-            }
-        }).collect() // Collect payments so now `QueryResult` is mapped to `Vec<Payment>`
-    }).unwrap(); // Unwrap `Vec<Payment>`
-    
-    Ok(Response::with(status::Ok))
-}*/
+    let payload = json::encode(&selected_items).unwrap();
+    Ok(Response::with((status::Ok,payload)))
+}
 
 fn main() {
-	let database_manager = DatabaseManager {
+	let database_manager_info = Arc::new(DatabaseManager {
 		pool: mysql::Pool::new("mysql://root:test@localhost:3306").unwrap(),
-	};
-	
+	});
+	let database_manager_add = database_manager_info.clone();
+	let database_manager_search = database_manager_info.clone();
+
 	let mut router = Router::new();
 	
-    router.post("/ItemInfo", move |r: &mut Request| get_item_info(r, &database_manager));
-    router.post("/ItemAdd" , move |r: &mut Request| add_items_to_inventory(r, &database_manager));
-        
+    router.post("/ItemInfo", move |r: &mut Request| get_item_info(r, &database_manager_info));
+    router.post("/ItemAdd" , move |r: &mut Request| add_items_to_inventory(r, &database_manager_add));
+    router.post("/ItemSearch" , move |r: &mut Request| search_for_item(r, &database_manager_search));
+
     Iron::new(router).http("localhost:3000").unwrap();
     println!("On 3000");
 }
