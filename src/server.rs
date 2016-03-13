@@ -61,8 +61,7 @@ fn add_items_to_inventory(request: &mut Request, database_manager : &DatabaseMan
 //json request format for search_for_item
 #[derive(RustcEncodable, RustcDecodable)]
 struct SearchItemRequest {
-    item_name: String,//find any item name that contains this
-    description: Option<String>,//or any item description that contains this
+    item_name_or_description: String,//find any item name OR description that contains this
 }
 fn search_for_item(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
 	let mut payload = String::new();
@@ -74,7 +73,7 @@ fn search_for_item(request: &mut Request, database_manager : &DatabaseManager) -
     
     let selected_items = match 
     database_manager.results_from_database(
-    	format!("SELECT * from test.inventory WHERE item_name LIKE \"%{0}%\"", item_request.item_name)
+    	format!("SELECT * from test.inventory WHERE item_name LIKE \"%{0}%\" OR description LIKE \"%{0}%\"", item_request.item_name_or_description)
     ) 
     {
     	Ok(s_i) => s_i,

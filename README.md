@@ -14,7 +14,7 @@ Windows Setup:
 Server API:
  * Request info about item
  * Add item to inventory
- * **Search for item based on name or description**
+ * Search for item based on name or description
 Client:
  * Get and display info about item 
  
