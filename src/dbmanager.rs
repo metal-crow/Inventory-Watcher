@@ -7,17 +7,87 @@ use std::error::Error;
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct Item {
     item_name: String,
-    quantity: u32,
+    quantity: Option<u32>,
     description: Option<String>,
+    x_coord: Option<u8>,
+    y_coord: Option<u8>,
 }
 
 impl Item {
+	//all possible field names
 	pub fn field_names() -> &'static str {
-		"item_name,quantity,description"
+		"item_name,quantity,description,x_coord,y_coord"
 	}
 	
-	pub fn fields(&self) -> String {
-		format!("{0},{1},{2}",self.item_name, self.quantity, self.description.clone().unwrap_or("".to_string()))
+	//only return field name that are not NONE
+	pub fn has_field_names(&self) -> &str {
+		let mut field_names = String::from("item_name");
+		match self.quantity {
+			Some(_) => field_names.push_str(",quantity"),
+		};
+		match self.description {
+			Some(_) => field_names.push_str(",description"),
+		};
+		match self.x_coord {
+			Some(_) => field_names.push_str(",x_coord"),
+		};
+		match self.y_coord {
+			Some(_) => field_names.push_str(",y_coord"),
+		};
+		
+		return field_names.as_str()
+	}
+	
+	//handle NONEs by not including in string at all
+	pub fn fields(&self) -> &str {
+		let mut field_values = String::from(self.item_name+",");
+		match self.quantity {
+			Some(q) => field_values.push_str(format!(",{}",q).as_str()),
+		};
+		match self.description {
+			Some(d) => field_values.push_str(format!(",{}",d).as_str()),
+		};
+		match self.x_coord {
+			Some(x) => field_values.push_str(format!(",{}",x).as_str()),
+		};
+		match self.y_coord {
+			Some(y) => field_values.push_str(format!(",{}",y).as_str()),
+		};
+		
+		return field_values.as_str()
+	}
+	
+	pub fn fields_with_names(&self) -> &str {
+		let mut field_names_values = String::from(format!("item_name='{}',",self.item_name).as_str());
+		match self.quantity {
+			Some(q) => field_names_values.push_str(format!(",quantity='{}'",q).as_str()),
+		};
+		match self.description {
+			Some(d) => field_names_values.push_str(format!(",description='{}'",d).as_str()),
+		};
+		match self.x_coord {
+			Some(x) => field_names_values.push_str(format!(",x_coord='{}'",x).as_str()),
+		};
+		match self.y_coord {
+			Some(y) => field_names_values.push_str(format!(",y_coord='{}'",y).as_str()),
+		};
+		
+		return field_names_values.as_str()
+	}
+	
+	//check all option fields to ensure they are some (excluding description)
+	pub fn valid_sql_insert(&self) -> Option<&str> {
+		match self.quantity {
+			None => return Some("quantity field not found"),
+		};
+		match self.x_coord {
+			None => return Some("x_coord field not found"),
+		};
+		match self.y_coord {
+			None => return Some("y_coord field not found"),
+		};
+		
+		None
 	}
 }
 
@@ -40,11 +110,13 @@ impl DatabaseManager {
 	        // and second call to `map` will map each `row` to `Payment`
 	        result.map(|x| x.unwrap()).map(|row| {
 	        	//TODO there should be a better way to do this	
-	            let (item_name, quantity, description) = mysql::from_row(row);
+	            let (item_name, quantity, description, x_coord, y_coord) = mysql::from_row(row);
 	            Item {
 	                item_name: item_name,
 	                quantity: quantity,
 	                description: description,
+	                x_coord: x_coord,
+	                y_coord: y_coord,
 	            }
 	        }).collect() // Collect payments so now `QueryResult` is mapped to `Vec`
 	    });

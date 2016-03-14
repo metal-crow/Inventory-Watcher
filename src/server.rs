@@ -31,7 +31,7 @@ fn get_item_info(request: &mut Request, database_manager : &DatabaseManager) -> 
     
     let selected_items = match 
     database_manager.results_from_database(
-    	format!("SELECT * from test.inventory WHERE item_name=\"{0}\"", request.item_name)
+    	format!("SELECT * from test.inventory WHERE item_name='{0}'", request.item_name)
     ) 
     {
     	Ok(s_i) => s_i,
@@ -58,7 +58,7 @@ fn search_for_item(request: &mut Request, database_manager : &DatabaseManager) -
     
     let selected_items = match 
     database_manager.results_from_database(
-    	format!("SELECT * from test.inventory WHERE item_name LIKE \"%{0}%\" OR description LIKE \"%{0}%\"", item_request.item_name_or_description)
+    	format!("SELECT * from test.inventory WHERE item_name LIKE '%{0}%' OR description LIKE '%{0}%'", item_request.item_name_or_description)
     ) 
     {
     	Ok(s_i) => s_i,
@@ -69,6 +69,7 @@ fn search_for_item(request: &mut Request, database_manager : &DatabaseManager) -
     Ok(Response::with((status::Ok,payload)))
 }
 
+//only allows description to be NONE 
 fn add_item_to_inventory(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
@@ -76,6 +77,10 @@ fn add_item_to_inventory(request: &mut Request, database_manager : &DatabaseMana
     	Ok(i) => i,
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
     };
+	
+	match item.valid_sql_insert() {
+		Some(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
+	}
 
 	match database_manager.alter_database(format!("INSERT into test.inventory ({0}) VALUES ({1})",Item::field_names(), item.fields())) {
 		None => Ok(Response::with(status::Ok)),
@@ -83,19 +88,35 @@ fn add_item_to_inventory(request: &mut Request, database_manager : &DatabaseMana
 	}
 }
 
+//allows anything except item_name to be NONE(NONE=do not update)
+fn update_item_in_inventory(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
+	let mut payload = String::new();
+    request.body.read_to_string(&mut payload).unwrap();
+    let item: Item = match json::decode(&payload) {
+    	Ok(i) => i,
+    	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
+    };
+
+	match database_manager.alter_database(format!("UPDATE test.inventory SET {} WHERE item_name='{}'", item.fields_with_names(), item.item_name)) {
+		None => Ok(Response::with(status::Ok)),
+		Some(err) => Ok(Response::with((status::BadRequest, err.to_string())))
+	}
+}
 
 fn main() {
 	let database_manager_info = Arc::new(DatabaseManager {
 		pool: mysql::Pool::new("mysql://root:test@localhost:3306").unwrap(),
 	});
-	let database_manager_add = database_manager_info.clone();
 	let database_manager_search = database_manager_info.clone();
+	let database_manager_add = database_manager_info.clone();
+	let database_manager_update = database_manager_info.clone();
 
 	let mut router = Router::new();
 	
     router.post("/ItemInfo", move |r: &mut Request| get_item_info(r, &database_manager_info));
     router.post("/ItemSearch" , move |r: &mut Request| search_for_item(r, &database_manager_search));
     router.post("/ItemAdd" , move |r: &mut Request| add_item_to_inventory(r, &database_manager_add));
+    router.post("/ItemUpdate" , move |r: &mut Request| update_item_in_inventory(r, &database_manager_update));
 
     Iron::new(router).http("localhost:3000").unwrap();
     println!("On 3000");
