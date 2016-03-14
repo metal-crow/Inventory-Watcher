@@ -11,12 +11,20 @@ Windows Setup:
  * MySQL
  
 ###Features
-Server API:
- * Request info about item
+Server API (Rust):
+ * Request info about item, given primary key
+ * Search for item based on partial name or partial description 
  * Add item to inventory
- * Search for item based on name or description
-Client:
+ * Update item info, given primary key
+ * Find item: send command to hardware
+ 
+Client (Javascript/HTML):
  * Get and display info about item 
+ 
+Hardware (Laser, Arduino):
+ * Store coordinates with item in Database
+ * Have laser attached to gible and arduino
+ * Point laser at selected item's coords
  
 ###ToDo 
 behind webauth  

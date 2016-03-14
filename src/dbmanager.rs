@@ -7,18 +7,26 @@ use std::error::Error;
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct Item {
     item_name: String,
-    quantity: i32,
+    quantity: u32,
     description: Option<String>,
 }
-static MYSQL_DB_COLS: &'static str = "item_name,quantity,description";
 
+impl Item {
+	pub fn field_names() -> &'static str {
+		"item_name,quantity,description"
+	}
+	
+	pub fn fields(&self) -> String {
+		format!("{0},{1},{2}",self.item_name, self.quantity, self.description.clone().unwrap_or("".to_string()))
+	}
+}
 
 pub struct DatabaseManager{
 	pub pool : mysql::Pool,
 }
 
 impl DatabaseManager {
-	//handles querying the database, and returing an array of the results in Item form. Only function that has access to Pool
+	//handles querying the database, and returing an array of the results in Item form.
 	pub fn results_from_database(&self, query : String) -> Result<Vec<Item>, mysql::Error> {
 		let mut statement = match self.pool.prepare(query) {
 			Ok(s) => s,
@@ -45,21 +53,10 @@ impl DatabaseManager {
 	}
 	
 	//handle inserting into the database or any other action that doesnt return a result, but can error
-	pub fn insert_into_database(&self, items: Vec<Item>) -> Vec<String> {
-		//allow execute of valid comands, but report errors
-		let mut errors: Vec<String> = Vec::new();
-
-		//insert into database
-		for mut stmt in self.pool.prepare(format!("INSERT into test.inventory ({0}) VALUES (?,?,?)",MYSQL_DB_COLS)).into_iter() {
-	        for i in items.iter() {
-	            match stmt.execute((&i.item_name, i.quantity, &i.description)) {
-	            	Ok(_) => continue,
-	            	Err(err) => errors.push(err.to_string()),
-	            }
-	        }
-	    }
-		
-		return errors;
+	pub fn alter_database(&self, query : String) -> Option<mysql::Error> {
+		match self.pool.prep_exec(query, ()) {
+			Ok(_) => None,
+			Err(err) => return Some(err),
+		}
 	}
-
 }
