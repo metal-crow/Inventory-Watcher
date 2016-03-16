@@ -1,9 +1,9 @@
 extern crate mysql;
 
-use std::error::Error;
 use mysql::conn::Opts;
 use std::io::prelude::*;
 use std::fs::File;
+use std::io;
 
 //struct in database
 #[derive(Debug, PartialEq, Eq)]
@@ -133,17 +133,23 @@ impl DatabaseManager {
 }
 
 //read mysql settings from settings.txt
-pub fn get_opts () -> Opts {
-	let mut settings = File::open("settings.txt").unwrap();
+pub fn get_opts() -> Result<Opts,io::Error> {
+	let mut settings =  match File::open("settings.txt"){
+		Ok(f) => f,
+		Err(e) => return Err(e),
+	};
 	let mut passwd = String::new();
-	settings.read_to_string(&mut passwd);
+	match settings.read_to_string(&mut passwd) {
+		Err(e) => return Err(e),
+		Ok(_) => {}, 
+	}
 	
-	Opts {
+	Ok(Opts {
 	    user: Some("root".to_string()),
 	    pass: Some(passwd),
 	    db_name: Some("test".to_string()),
 	    ip_or_hostname: Some("localhost".to_string()),
 	    tcp_port: 3306,
 	    ..Default::default()
-	}
+	})
 }

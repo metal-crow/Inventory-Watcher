@@ -106,7 +106,7 @@ fn update_item_in_inventory(request: &mut Request, database_manager : &DatabaseM
 	}
 }
 
-//query coords from sql (secure)
+//query coords from sql (secure) and send to the laser pointer
 fn find_item_physical(request: &mut Request, database_manager : &DatabaseManager, laser_control : &Client) -> IronResult<Response> {
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
@@ -127,13 +127,16 @@ fn find_item_physical(request: &mut Request, database_manager : &DatabaseManager
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string()))),
     };
     
-//    laserControl.post("localhost:3000/SetLaser").body(json::encode(&selected_item).unwrap()).send().unwrap();
+    laser_control.post("localhost:3000/SetLaser").body(selected_item.as_str()).send().unwrap();    //safe to unwrap b/c we shouldnt get a response
     
     Ok(Response::with((status::Ok)))
 }
 
 fn main() {
-	let opts = dbmanager::get_opts();
+	let opts = match dbmanager::get_opts() {
+		Err(err) => panic!("Error reading MySQL settings file: {:?}",err),
+		Ok(o) => o,
+	};
 	println!("{:?}",opts);
 	let database_manager_info = Arc::new(
 		DatabaseManager {
