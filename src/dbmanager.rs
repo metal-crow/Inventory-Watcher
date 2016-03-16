@@ -19,75 +19,62 @@ impl Item {
 		"item_name,quantity,description,x_coord,y_coord"
 	}
 	
-	//only return field name that are not NONE
-	pub fn has_field_names(&self) -> &str {
-		let mut field_names = String::from("item_name");
-		match self.quantity {
-			Some(_) => field_names.push_str(",quantity"),
-		};
-		match self.description {
-			Some(_) => field_names.push_str(",description"),
-		};
-		match self.x_coord {
-			Some(_) => field_names.push_str(",x_coord"),
-		};
-		match self.y_coord {
-			Some(_) => field_names.push_str(",y_coord"),
-		};
+	//returns comma seperated string of the values of the struct's fields
+	//handle NONEs by not including in string
+	//also return what fields were none(if any), in error
+	pub fn fields(&self) -> Result<String,String> {
+		let mut field_values = String::from(format!("'{}'",self.item_name.as_str()));
+		let mut errors = String::new();
 		
-		return field_names.as_str()
-	}
-	
-	//handle NONEs by not including in string at all
-	pub fn fields(&self) -> &str {
-		let mut field_values = String::from(self.item_name+",");
 		match self.quantity {
+			None => errors.push_str("quantity field not found,"),
 			Some(q) => field_values.push_str(format!(",{}",q).as_str()),
 		};
-		match self.description {
-			Some(d) => field_values.push_str(format!(",{}",d).as_str()),
+		match self.description.as_ref() {
+			None => errors.push_str("description field not found,"),
+			Some(d) => field_values.push_str(format!(",'{}'",d).as_str()),
 		};
 		match self.x_coord {
+			None => errors.push_str("x_coord field not found,"),
 			Some(x) => field_values.push_str(format!(",{}",x).as_str()),
 		};
 		match self.y_coord {
+			None => errors.push_str("y_coord field not found,"),
 			Some(y) => field_values.push_str(format!(",{}",y).as_str()),
 		};
 		
-		return field_values.as_str()
+		match errors.as_ref() {
+			"" => return Ok(field_values),
+			_ => return Err(errors)
+		}
 	}
 	
-	pub fn fields_with_names(&self) -> &str {
-		let mut field_names_values = String::from(format!("item_name='{}',",self.item_name).as_str());
+	//returns string in format VARNAME=VARVALUE,...
+	//handle NONEs by not including in string
+	pub fn fields_with_names(&self) -> String {
+		let mut field_names_values = String::from(format!("item_name='{}'",self.item_name).as_str());
 		match self.quantity {
-			Some(q) => field_names_values.push_str(format!(",quantity='{}'",q).as_str()),
+			None => {},
+			Some(q) => field_names_values.push_str(format!(",quantity={}",q).as_str()),
 		};
-		match self.description {
+		match self.description.as_ref() {
+			None => {},
 			Some(d) => field_names_values.push_str(format!(",description='{}'",d).as_str()),
 		};
 		match self.x_coord {
-			Some(x) => field_names_values.push_str(format!(",x_coord='{}'",x).as_str()),
+			None => {},
+			Some(x) => field_names_values.push_str(format!(",x_coord={}",x).as_str()),
 		};
 		match self.y_coord {
-			Some(y) => field_names_values.push_str(format!(",y_coord='{}'",y).as_str()),
+			None => {},
+			Some(y) => field_names_values.push_str(format!(",y_coord={}",y).as_str()),
 		};
 		
-		return field_names_values.as_str()
+		return field_names_values
 	}
 	
-	//check all option fields to ensure they are some (excluding description)
-	pub fn valid_sql_insert(&self) -> Option<&str> {
-		match self.quantity {
-			None => return Some("quantity field not found"),
-		};
-		match self.x_coord {
-			None => return Some("x_coord field not found"),
-		};
-		match self.y_coord {
-			None => return Some("y_coord field not found"),
-		};
-		
-		None
+	pub fn get_item_name(&self) -> &str {
+		self.item_name.as_str()
 	}
 }
 

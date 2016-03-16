@@ -69,7 +69,7 @@ fn search_for_item(request: &mut Request, database_manager : &DatabaseManager) -
     Ok(Response::with((status::Ok,payload)))
 }
 
-//only allows description to be NONE 
+//dont allow any NONE values 
 fn add_item_to_inventory(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
@@ -78,11 +78,12 @@ fn add_item_to_inventory(request: &mut Request, database_manager : &DatabaseMana
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
     };
 	
-	match item.valid_sql_insert() {
-		Some(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
-	}
+	let fields = match item.fields() {
+		Ok(r) => r,
+		Err(err) => return Ok(Response::with((status::BadRequest, err.to_string()))),
+	};
 
-	match database_manager.alter_database(format!("INSERT into test.inventory ({0}) VALUES ({1})",Item::field_names(), item.fields())) {
+	match database_manager.alter_database(format!("INSERT into test.inventory ({0}) VALUES ({1})",Item::field_names(), fields)) {
 		None => Ok(Response::with(status::Ok)),
 		Some(err) => Ok(Response::with((status::BadRequest, err.to_string())))
 	}
@@ -97,7 +98,7 @@ fn update_item_in_inventory(request: &mut Request, database_manager : &DatabaseM
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
     };
 
-	match database_manager.alter_database(format!("UPDATE test.inventory SET {} WHERE item_name='{}'", item.fields_with_names(), item.item_name)) {
+	match database_manager.alter_database(format!("UPDATE test.inventory SET {} WHERE item_name='{}'", item.fields_with_names(), item.get_item_name())) {
 		None => Ok(Response::with(status::Ok)),
 		Some(err) => Ok(Response::with((status::BadRequest, err.to_string())))
 	}
