@@ -152,6 +152,7 @@ fn main() {
 	let database_manager_find = database_manager_info.clone();
 
 	let mut router = Router::new();
+	//TODO main index "/" serves all the html/js client view stuff. Then the js there queries these api endpoints
     router.post("/ItemInfo", move |r: &mut Request| get_item_info(r, &database_manager_info));
     router.post("/ItemSearch" , move |r: &mut Request| search_for_item(r, &database_manager_search));
     router.post("/ItemAdd" , move |r: &mut Request| add_item_to_inventory(r, &database_manager_add));
