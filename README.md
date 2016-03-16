@@ -17,7 +17,7 @@ Server API (Rust):
  * Search for item based on partial name or partial description 
  * Add item to inventory
  * Update item info, given primary key
- * ->Find item: send command to hardware
+ * Find item: send command to hardware
  
 Client (Javascript/HTML):
  * Search for items

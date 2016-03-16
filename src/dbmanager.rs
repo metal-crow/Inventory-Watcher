@@ -3,7 +3,6 @@ extern crate mysql;
 use mysql::conn::Opts;
 use std::io::prelude::*;
 use std::fs::File;
-use std::io;
 
 //struct in database
 #[derive(Debug, PartialEq, Eq)]
@@ -132,24 +131,34 @@ impl DatabaseManager {
 	}
 }
 
-//read mysql settings from settings.txt
-pub fn get_opts() -> Result<Opts,io::Error> {
+//read mysql and laser control settings from settings.txt
+pub fn get_opts() -> Result<(Opts,String),String> {
 	let mut settings =  match File::open("settings.txt"){
 		Ok(f) => f,
-		Err(e) => return Err(e),
+		Err(_) => return Err("settings.txt file not found".to_string()),
 	};
 	let mut passwd = String::new();
 	match settings.read_to_string(&mut passwd) {
-		Err(e) => return Err(e),
+		Err(_) => return Err("Password not found in settings file".to_string()),
+		Ok(_) => {}, 
+	}
+	let mut laser_pi_ip = String::new();
+	match settings.read_to_string(&mut laser_pi_ip) {
+		Err(_) => return Err("Ip address for RasberryPi not found in settings file".to_string()),
 		Ok(_) => {}, 
 	}
 	
-	Ok(Opts {
-	    user: Some("root".to_string()),
-	    pass: Some(passwd),
-	    db_name: Some("test".to_string()),
-	    ip_or_hostname: Some("localhost".to_string()),
-	    tcp_port: 3306,
-	    ..Default::default()
-	})
+	Ok(
+		(
+			Opts {
+			    user: Some("root".to_string()),
+			    pass: Some(passwd),
+			    db_name: Some("test".to_string()),
+			    ip_or_hostname: Some("localhost".to_string()),
+			    tcp_port: 3306,
+			    ..Default::default()
+			},
+		laser_pi_ip
+		)
+	)
 }
