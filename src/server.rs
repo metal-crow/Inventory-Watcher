@@ -134,7 +134,7 @@ fn find_item_physical(request: &mut Request, database_manager : &DatabaseManager
 
 fn main() {
 	let opts = match dbmanager::get_opts() {
-		Err(err) => panic!("Error reading MySQL settings file: {:?}",err),
+		Err(err) => panic!("Error reading settings file: {:?}",err),
 		Ok(o) => o,
 	};
 	println!("{:?}",opts);
