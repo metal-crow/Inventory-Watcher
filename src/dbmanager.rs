@@ -1,6 +1,9 @@
 extern crate mysql;
 
 use std::error::Error;
+use mysql::conn::Opts;
+use std::io::prelude::*;
+use std::fs::File;
 
 //struct in database
 #[derive(Debug, PartialEq, Eq)]
@@ -9,8 +12,8 @@ pub struct Item {
     item_name: String,
     quantity: Option<u32>,
     description: Option<String>,
-    x_coord: Option<u8>,
-    y_coord: Option<u8>,
+    x_coord: Option<u32>,
+    y_coord: Option<u32>,
 }
 
 impl Item {
@@ -76,6 +79,15 @@ impl Item {
 	pub fn get_item_name(&self) -> &str {
 		self.item_name.as_str()
 	}
+	
+	pub fn get_item_xcoords(&self) -> u32 {
+		self.x_coord.unwrap()
+	}
+	
+	pub fn get_item_ycoords(&self) -> u32 {
+		self.y_coord.unwrap()
+	}
+
 }
 
 pub struct DatabaseManager{
@@ -117,5 +129,21 @@ impl DatabaseManager {
 			Ok(_) => None,
 			Err(err) => return Some(err),
 		}
+	}
+}
+
+//read mysql settings from settings.txt
+pub fn get_opts () -> Opts {
+	let mut settings = File::open("settings.txt").unwrap();
+	let mut passwd = String::new();
+	settings.read_to_string(&mut passwd);
+	
+	Opts {
+	    user: Some("root".to_string()),
+	    pass: Some(passwd),
+	    db_name: Some("test".to_string()),
+	    ip_or_hostname: Some("localhost".to_string()),
+	    tcp_port: 3306,
+	    ..Default::default()
 	}
 }

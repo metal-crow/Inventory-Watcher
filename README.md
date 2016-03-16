@@ -17,15 +17,18 @@ Server API (Rust):
  * Search for item based on partial name or partial description 
  * Add item to inventory
  * Update item info, given primary key
- * Find item: send command to hardware
+ * ->Find item: send command to hardware
  
 Client (Javascript/HTML):
+ * Search for items
  * Get and display info about item 
+ * Request item location be shown
+ * Update item stats
  
-Hardware (Laser, Arduino):
+Hardware (Laser, RasPi):
  * Store coordinates with item in Database
- * Have laser attached to gible and arduino
- * Point laser at selected item's coords
+ * Have laser attached to gimble and RasPi
+ * When Pi receives data over network, point laser at received coords
  
 ###ToDo 
 behind webauth  

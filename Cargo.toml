@@ -12,6 +12,7 @@ name = "server"
 iron = "*"
 rustc-serialize = "*"
 router = "*"
+hyper = "*"
 
 [dependencies.mysql]
 default-features = false
