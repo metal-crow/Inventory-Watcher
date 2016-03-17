@@ -11,6 +11,9 @@ Windows Setup:
   * install mingw-w64-x86_64-openssl
  * install MySQL
  
+Linux Setup:  
+ * Change cargo.toml to only have `mysql="*"`, instead of the other mysql stuff
+ 
 ###Features
 Server API (Rust):
  * Request info about item, given primary key
@@ -29,6 +32,25 @@ Hardware (Laser, RasPi):
  * Store coordinates with item in Database
  * Have laser attached to gimble and RasPi
  * When Pi receives data over network, point laser at received coords
+ 
+###SQL Schema
+Item:
+ * item_name: String[Primary Key]  
+ * quantity: u32  
+ * description: String[non-null, can be empty]  
+ * x_coord: u32  
+ * y_coord: u32  
+  
+###Settings.ini
+\[MySQL\]:  
+ * user
+ * password
+ * database_name
+ * ip\_or\_hostname
+ * port
+ 
+\[RasPi\]: 
+ * rasPi\_ip\_or\_host
  
 ###ToDo 
 behind webauth  

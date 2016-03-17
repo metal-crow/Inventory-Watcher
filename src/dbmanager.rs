@@ -1,8 +1,7 @@
 extern crate mysql;
+extern crate ini;
 
 use mysql::conn::Opts;
-use std::io::prelude::*;
-use std::fs::File;
 
 //struct in database
 #[derive(Debug, PartialEq, Eq)]
@@ -131,34 +130,59 @@ impl DatabaseManager {
 	}
 }
 
-//read mysql and laser control settings from settings.txt
+//read mysql and laser control settings from settings.ini
 pub fn get_opts() -> Result<(Opts,String),String> {
-	let mut settings =  match File::open("settings.txt"){
+	let conf = match ini::Ini::load_from_file("settings.ini") {
 		Ok(f) => f,
-		Err(_) => return Err("settings.txt file not found".to_string()),
+		Err(_) => return Err("settings.ini file not found".to_string()),
 	};
-	let mut passwd = String::new();
-	match settings.read_to_string(&mut passwd) {
-		Err(_) => return Err("Password not found in settings file".to_string()),
-		Ok(_) => {}, 
-	}
-	let mut laser_pi_ip = String::new();
-	match settings.read_to_string(&mut laser_pi_ip) {
-		Err(_) => return Err("Ip address for RasberryPi not found in settings file".to_string()),
-		Ok(_) => {}, 
-	}
-	
+	let mysql_settings = match conf.section(Some("MySQL".to_owned())) {
+		Some(s) => s,
+		None => return Err("MySQL section not found".to_string()),
+	};
+	let user = match mysql_settings.get("user") {
+		Some(s) => s,
+		None => return Err("user variable not found".to_string()),
+	};
+	let pass = match mysql_settings.get("password") {
+		Some(s) => s,
+		None => return Err("password variable not found".to_string()),
+	};
+	let db_name = match mysql_settings.get("database_name") {
+		Some(s) => s,
+		None => return Err("database_name variable not found".to_string()),
+	};
+	let ip_or_hostname = match mysql_settings.get("ip_or_hostname") {
+		Some(s) => s,
+		None => return Err("ip_or_hostname variable not found".to_string()),
+	};
+	let port = match mysql_settings.get("port") {
+		Some(s) => match s.parse::<u16>() {
+			Ok(s) => s,
+			Err(_) => return Err("port variable not a valid number".to_string()),
+		},
+		None => return Err("port variable not found".to_string()),
+	};
+	let raspi_settings = match conf.section(Some("RasPi".to_owned())) {
+		Some(s) => s,
+		None => return Err("RasPi section not found".to_string()),
+	};
+	let raspi_ip_or_host = match raspi_settings.get("rasPi_ip_or_host") {
+		Some(s) => s,
+		None => return Err("rasPi_ip_or_host variable not found".to_string()),
+	};
+
 	Ok(
 		(
 			Opts {
-			    user: Some("root".to_string()),
-			    pass: Some(passwd),
-			    db_name: Some("test".to_string()),
-			    ip_or_hostname: Some("localhost".to_string()),
-			    tcp_port: 3306,
+			    user: Some(user.to_string()),
+			    pass: Some(pass.to_string()),
+			    db_name: Some(db_name.to_string()),
+			    ip_or_hostname: Some(ip_or_hostname.to_string()),
+			    tcp_port: port,
 			    ..Default::default()
 			},
-		laser_pi_ip
+		raspi_ip_or_host.to_string()
 		)
 	)
 }

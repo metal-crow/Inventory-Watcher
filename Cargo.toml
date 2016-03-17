@@ -13,6 +13,7 @@ iron = "*"
 rustc-serialize = "*"
 router = "*"
 hyper = "*"
+rust-ini = "*"
 
 [dependencies.mysql]
 default-features = false
