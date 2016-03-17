@@ -144,7 +144,10 @@ fn main() {
 	
 	let database_manager_info = Arc::new(
 		DatabaseManager {
-			pool: mysql::Pool::new(opts.0).unwrap(),
+			pool: match mysql::Pool::new(opts.0) {
+				Ok(p) => p,
+				Err(_) => panic!("Could not connect to MySQL database (Is the server up? Is your username/password correct?)"),
+			},
 		});
 	let database_manager_search = database_manager_info.clone();
 	let database_manager_add = database_manager_info.clone();
