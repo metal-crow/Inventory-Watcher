@@ -16,11 +16,12 @@ Linux Setup:
  
 ###Features
 Server API (Rust):
- * Request info about item, given primary key
- * Search for item based on partial name or partial description 
- * Add item to inventory
- * Update item info, given primary key
- * Find item: send command to hardware
+ * `/ItemInfo`: Request info about item, given primary key
+ * `/ItemSearch`: Search for item based on partial name or partial description 
+ * `/ItemAdd`: Add item to inventory
+ * `/ItemUpdate`: Update item info, given primary key
+ * `/ItemFind`: Find item: send command to hardware
+ * `/`: Serve client html/js view
  
 Client (Javascript/HTML):
  * Search for items
