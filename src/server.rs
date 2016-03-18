@@ -2,6 +2,8 @@ extern crate iron;
 extern crate router;
 extern crate rustc_serialize;
 extern crate mysql;
+extern crate staticfile;
+extern crate mount;
 
 mod dbmanager;
 
@@ -12,6 +14,9 @@ use router::Router;
 use std::io::Read;
 use rustc_serialize::json;
 use std::sync::Arc;
+use std::path::Path;
+use staticfile::Static;
+use mount::Mount;
 
 //TODO the two item get methods are the same except for the query. Use an enum, pass correct string when created by router?
 
@@ -149,14 +154,20 @@ fn main() {
 	let database_manager_update = database_manager_info.clone();
 	let database_manager_find = database_manager_info.clone();
 
+	let mut mount = Mount::new();
 	let mut router = Router::new();
-	//TODO main index "/" serves all the html/js client view stuff. Then the js there queries these api endpoints
+	//these endpoints serves all the static html/js client view stuff. Then the js queries api endpoints
+	//mount.mount("/", );
+	mount.mount("/public", Static::new(Path::new("E:/Code Workspace/Inventory_Watcher/public")));
+	
+	//REST API endpoints
     router.post("/ItemInfo", move |r: &mut Request| get_item_info(r, &database_manager_info));
     router.post("/ItemSearch" , move |r: &mut Request| search_for_item(r, &database_manager_search));
     router.post("/ItemAdd" , move |r: &mut Request| add_item_to_inventory(r, &database_manager_add));
     router.post("/ItemUpdate" , move |r: &mut Request| update_item_in_inventory(r, &database_manager_update));
     router.post("/ItemFind" , move |r: &mut Request| find_item_physical(r, &database_manager_find));
 
-    Iron::new(router).http("localhost:3000").unwrap();
+	mount.mount("/", router);
+    Iron::new(mount).http("localhost:3000").unwrap();
     println!("On 3000");
 }

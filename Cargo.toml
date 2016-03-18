@@ -13,6 +13,8 @@ iron = "*"
 rustc-serialize = "*"
 router = "*"
 rust-ini = "*"
+staticfile = "*"
+mount = "*"
 
 [dependencies.mysql]
 default-features = false
