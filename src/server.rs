@@ -2,7 +2,6 @@ extern crate iron;
 extern crate router;
 extern crate rustc_serialize;
 extern crate mysql;
-extern crate hyper;
 
 mod dbmanager;
 
@@ -13,7 +12,6 @@ use router::Router;
 use std::io::Read;
 use rustc_serialize::json;
 use std::sync::Arc;
-use hyper::Client;
 
 //TODO the two item get methods are the same except for the query. Use an enum, pass correct string when created by router?
 
@@ -107,7 +105,7 @@ fn update_item_in_inventory(request: &mut Request, database_manager : &DatabaseM
 }
 
 //query coords from sql (secure) and send to the laser pointer
-fn find_item_physical(request: &mut Request, database_manager : &DatabaseManager, laser_control : &Client, laser_control_ip: &String) -> IronResult<Response> {
+fn find_item_physical(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
     let request: ItemRequest = match json::decode(&payload) {
@@ -127,7 +125,7 @@ fn find_item_physical(request: &mut Request, database_manager : &DatabaseManager
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string()))),
     };
     
-    laser_control.post(format!("{}/SetLaser",laser_control_ip).as_str()).body(selected_item.as_str()).send().unwrap();    //safe to unwrap b/c we shouldnt get a response
+    //laser_control.post(format!("{}/SetLaser",laser_control_ip).as_str()).body(selected_item.as_str()).send().unwrap();    //safe to unwrap b/c we shouldnt get a response
     
     Ok(Response::with((status::Ok)))
 }
@@ -138,13 +136,10 @@ fn main() {
 		Ok(o) => o,
 	};
 	println!("{:?}",opts);
-
-    let laser_control = Client::new();
-	let laser_control_host = opts.1;
 	
 	let database_manager_info = Arc::new(
 		DatabaseManager {
-			pool: match mysql::Pool::new(opts.0) {
+			pool: match mysql::Pool::new(opts) {
 				Ok(p) => p,
 				Err(_) => panic!("Could not connect to MySQL database (Is the server up? Is your username/password correct?)"),
 			},
@@ -160,7 +155,7 @@ fn main() {
     router.post("/ItemSearch" , move |r: &mut Request| search_for_item(r, &database_manager_search));
     router.post("/ItemAdd" , move |r: &mut Request| add_item_to_inventory(r, &database_manager_add));
     router.post("/ItemUpdate" , move |r: &mut Request| update_item_in_inventory(r, &database_manager_update));
-    router.post("/ItemFind" , move |r: &mut Request| find_item_physical(r, &database_manager_find, &laser_control, &laser_control_host));
+    router.post("/ItemFind" , move |r: &mut Request| find_item_physical(r, &database_manager_find));
 
     Iron::new(router).http("localhost:3000").unwrap();
     println!("On 3000");

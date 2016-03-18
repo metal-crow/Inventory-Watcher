@@ -12,7 +12,6 @@ name = "server"
 iron = "*"
 rustc-serialize = "*"
 router = "*"
-hyper = "*"
 rust-ini = "*"
 
 [dependencies.mysql]

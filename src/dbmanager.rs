@@ -131,7 +131,7 @@ impl DatabaseManager {
 }
 
 //read mysql and laser control settings from settings.ini
-pub fn get_opts() -> Result<(Opts,String),String> {
+pub fn get_opts() -> Result<Opts,String> {
 	let conf = match ini::Ini::load_from_file("settings.ini") {
 		Ok(f) => f,
 		Err(_) => return Err("settings.ini file not found".to_string()),
@@ -163,26 +163,15 @@ pub fn get_opts() -> Result<(Opts,String),String> {
 		},
 		None => return Err("port variable not found".to_string()),
 	};
-	let raspi_settings = match conf.section(Some("RasPi".to_owned())) {
-		Some(s) => s,
-		None => return Err("RasPi section not found".to_string()),
-	};
-	let raspi_ip_or_host = match raspi_settings.get("rasPi_ip_or_host") {
-		Some(s) => s,
-		None => return Err("rasPi_ip_or_host variable not found".to_string()),
-	};
 
 	Ok(
-		(
-			Opts {
-			    user: Some(user.to_string()),
-			    pass: Some(pass.to_string()),
-			    db_name: Some(db_name.to_string()),
-			    ip_or_hostname: Some(ip_or_hostname.to_string()),
-			    tcp_port: port,
-			    ..Default::default()
-			},
-		raspi_ip_or_host.to_string()
-		)
+		Opts {
+		    user: Some(user.to_string()),
+		    pass: Some(pass.to_string()),
+		    db_name: Some(db_name.to_string()),
+		    ip_or_hostname: Some(ip_or_hostname.to_string()),
+		    tcp_port: port,
+		    ..Default::default()
+		}
 	)
 }

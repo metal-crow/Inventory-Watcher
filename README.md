@@ -20,19 +20,15 @@ Server API (Rust):
  * `/ItemSearch`: Search for item based on partial name or partial description 
  * `/ItemAdd`: Add item to inventory
  * `/ItemUpdate`: Update item info, given primary key
- * `/ItemFind`: Find item: send command to hardware
+ * `/ItemFind`: Find item: TODO either return photo with the area highlighted or give the photos from `/`, and return photo # and location to highlight from js
  * `/`: Serve client html/js view
+ * `/public`: Serve everything in the selected folder as static TODO
  
 Client (Javascript/HTML):
  * Search for items
- * Get and display info about item 
+ * Get and display info about item: Done via highlighting area in picture of room [Should this be done via qr codes and cv?]
  * Request item location be shown
  * Update item stats
- 
-Hardware (Laser, RasPi):
- * Store coordinates with item in Database
- * Have laser attached to gimble and RasPi
- * When Pi receives data over network, point laser at received coords
  
 ###SQL Schema
 Item:
@@ -49,9 +45,6 @@ Item:
  * database_name
  * ip\_or\_hostname
  * port
- 
-\[RasPi\]: 
- * rasPi\_ip\_or\_host
  
 ###ToDo 
 behind webauth  
