@@ -22,7 +22,7 @@ Server API (Rust):
  * `/ItemUpdate`: Update item info, given primary key
  * `/ItemFind`: Find item: TODO either return photo with the area highlighted or give the photos from `/`, and return photo # and location to highlight from js
  * `/`: Serve client html/js view
- * `/public`: Serve everything in the selected folder as static TODO
+ * `/public`: Serve everything in the selected folder as static
  
 Client (Javascript/HTML):
  * Search for items
