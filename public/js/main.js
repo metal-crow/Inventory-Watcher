@@ -65,7 +65,7 @@ function itemSearch(item) {
                		Name:<input placeholder=\"Item Name\" type=\"text\" id=\"item-name\" value="+data[i].item_name+">\
     				Description:<input type=\"text\" id=\"description\" value="+data[i].description+">\
     				Quantity:<input placeholder=\"Quantity\" type=\"text\" id=\"quantity\" value="+data[i].quantity+">\
-    				<button id=\"add-new-item\">Add New Item</button>\
+    				<button id=\"add-new-item\">Edit Item</button>\
     				";
                 	list_parent.appendChild(new_item);
                }

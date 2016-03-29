@@ -20,15 +20,15 @@ Server API (Rust):
  * `/ItemSearch`: Search for item based on partial name or partial description 
  * `/ItemAdd`: Add item to inventory
  * `/ItemUpdate`: Update item info, given primary key
- * `/ItemFind`: Find item: TODO either return photo with the area highlighted or give the photos from `/`, and return photo # and location to highlight from js
+ * `/ItemFind`: Find item: return photo # and location to highlight from js
  * `/`: Serve client html/js view
  * `/public`: Serve everything in the selected folder as static
  
 Client (Javascript/HTML):
  * Search for items
- * Get and display info about item: Done via highlighting area in picture of room [Should this be done via qr codes and cv?]
- * Request item location be shown
- * Update item stats
+ * Edit/Add items
+  * Select item's location in photo via javascript click-and-drag highlighting of image
+ * Get and display info about item: Done via highlighting area in picture of room
  
 ###SQL Schema
 Item:
