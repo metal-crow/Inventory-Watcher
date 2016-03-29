@@ -61,11 +61,12 @@ function itemSearch(item) {
                for(var i=0;i<data.length;i++) {
                		var new_item = document.createElement('div');
                		new_item.id = "item"+i;
+               		console.log(data);
                		new_item.innerHTML = "\
-               		Name:<input placeholder=\"Item Name\" type=\"text\" id=\"item-name-"+i+"\" value="+data[i].item_name+">\
-    				Description:<input type=\"text\" id=\"description-"+i+"\" value="+data[i].description+">\
-    				Quantity:<input placeholder=\"Quantity\" type=\"text\" id=\"quantity-"+i+"\" value="+data[i].quantity+">\
-    				<button id=\"add-new-item\" onclick=\"itemUpdate("+i+")\">Edit Item</button>\
+               		Name:<input placeholder=\"Item Name\" type=\"text\" id=\"item-name-"+i+"\" value=\""+data[i].item_name+"\">\
+    				Description:<input type=\"text\" id=\"description-"+i+"\" value=\""+data[i].description+"\">\
+    				Quantity:<input placeholder=\"Quantity\" type=\"text\" id=\"quantity-"+i+"\" value=\""+data[i].quantity+"\">\
+    				<button id=\"add-new-item\" onclick=\"itemUpdate("+i+","+data[i].item_key+")\">Edit Item</button>\
     				";
                 	list_parent.appendChild(new_item);
                }
@@ -101,8 +102,9 @@ function itemAdd(item) {
          )
 }
 
-function itemUpdate(item_num) {
+function itemUpdate(item_num,item_key) {
   var item = {    
+    item_key: item_key,
     item_name: document.getElementById("item-name-"+item_num).value,
     description: document.getElementById("description-"+item_num).value,
     quantity: document.getElementById("quantity-"+item_num).value
