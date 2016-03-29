@@ -32,7 +32,8 @@ Client (Javascript/HTML):
  
 ###SQL Schema
 Item:
- * item_name: String[Primary Key]  
+ * item_key: u32, auto incremented primary key
+ * item_name: String, cannot be null  
  * quantity: u32  
  * description: String[non-null, can be empty]  
  * x_coord: u32  

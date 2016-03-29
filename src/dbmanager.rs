@@ -7,6 +7,7 @@ use mysql::conn::Opts;
 #[derive(Debug, PartialEq, Eq)]
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct Item {
+	item_key: u32,
     item_name: String,
     quantity: Option<u32>,
     description: Option<String>,
@@ -53,7 +54,7 @@ impl Item {
 	//returns string in format VARNAME=VARVALUE,...
 	//handle NONEs by not including in string
 	pub fn fields_with_names(&self) -> String {
-		let mut field_names_values = String::from(format!("item_name='{}'",self.item_name).as_str());
+		let mut field_names_values = String::from(format!("item_name='{}'",self.item_name.as_str()));
 		match self.quantity {
 			None => {},
 			Some(q) => field_names_values.push_str(format!(",quantity={}",q).as_str()),
@@ -74,8 +75,8 @@ impl Item {
 		return field_names_values
 	}
 	
-	pub fn get_item_name(&self) -> &str {
-		self.item_name.as_str()
+	pub fn get_item_key(&self) -> u32 {
+		self.item_key
 	}
 	
 	pub fn get_item_xcoords(&self) -> u32 {
@@ -106,9 +107,9 @@ impl DatabaseManager {
 	        // will map each `MyResult` to contained `row` (no proper error handling)
 	        // and second call to `map` will map each `row` to `Payment`
 	        result.map(|x| x.unwrap()).map(|row| {
-	        	//TODO there should be a better way to do this	
-	            let (item_name, quantity, description, x_coord, y_coord) = mysql::from_row(row);
+	            let (item_key,item_name, quantity, description, x_coord, y_coord) = mysql::from_row(row);
 	            Item {
+	            	item_key: item_key,
 	                item_name: item_name,
 	                quantity: quantity,
 	                description: description,

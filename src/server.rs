@@ -23,9 +23,10 @@ use mount::Mount;
 //json request format for an item name only
 #[derive(RustcEncodable, RustcDecodable)]
 struct ItemRequest {
-    item_name: String,
+    item_key: String,
 }
 fn get_item_info(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
+	println!("get");
 	//get request json and convert to struct
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
@@ -36,7 +37,7 @@ fn get_item_info(request: &mut Request, database_manager : &DatabaseManager) -> 
     
     let selected_items = match 
     database_manager.results_from_database(
-    	format!("SELECT * from inventory WHERE item_name='{0}'", request.item_name)
+    	format!("SELECT * from inventory WHERE item_key='{0}'", request.item_key)
     ) 
     {
     	Ok(s_i) => s_i,
@@ -98,6 +99,7 @@ fn add_item_to_inventory(request: &mut Request, database_manager : &DatabaseMana
 
 //allows anything except item_name to be NONE(NONE=do not update)
 fn update_item_in_inventory(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
+	println!("update");
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
     let item: Item = match json::decode(&payload) {
@@ -105,7 +107,7 @@ fn update_item_in_inventory(request: &mut Request, database_manager : &DatabaseM
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
     };
 
-	match database_manager.alter_database(format!("UPDATE inventory SET {} WHERE item_name='{}'", item.fields_with_names(), item.get_item_name())) {
+	match database_manager.alter_database(format!("UPDATE inventory SET {} WHERE item_key='{}'", item.fields_with_names(), item.get_item_key())) {
 		None => Ok(Response::with(status::Ok)),
 		Some(err) => Ok(Response::with((status::BadRequest, err.to_string())))
 	}
@@ -113,6 +115,7 @@ fn update_item_in_inventory(request: &mut Request, database_manager : &DatabaseM
 
 //query coords for image from sql and return
 fn find_item_physical(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
+	println!("find");
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
     let request: ItemRequest = match json::decode(&payload) {
@@ -122,7 +125,7 @@ fn find_item_physical(request: &mut Request, database_manager : &DatabaseManager
 
 	let item_coords: String = match 
     database_manager.results_from_database(
-    	format!("SELECT * from inventory WHERE item_name='{0}'", request.item_name)
+    	format!("SELECT * from inventory WHERE item_key='{0}'", request.item_key)
     ) 
     {
     	Ok(s_i) => match s_i.len() {

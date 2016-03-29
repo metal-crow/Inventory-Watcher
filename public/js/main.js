@@ -62,10 +62,10 @@ function itemSearch(item) {
                		var new_item = document.createElement('div');
                		new_item.id = "item"+i;
                		new_item.innerHTML = "\
-               		Name:<input placeholder=\"Item Name\" type=\"text\" id=\"item-name\" value="+data[i].item_name+">\
-    				Description:<input type=\"text\" id=\"description\" value="+data[i].description+">\
-    				Quantity:<input placeholder=\"Quantity\" type=\"text\" id=\"quantity\" value="+data[i].quantity+">\
-    				<button id=\"add-new-item\">Edit Item</button>\
+               		Name:<input placeholder=\"Item Name\" type=\"text\" id=\"item-name-"+i+"\" value="+data[i].item_name+">\
+    				Description:<input type=\"text\" id=\"description-"+i+"\" value="+data[i].description+">\
+    				Quantity:<input placeholder=\"Quantity\" type=\"text\" id=\"quantity-"+i+"\" value="+data[i].quantity+">\
+    				<button id=\"add-new-item\" onclick=\"itemUpdate("+i+")\">Edit Item</button>\
     				";
                 	list_parent.appendChild(new_item);
                }
@@ -101,7 +101,12 @@ function itemAdd(item) {
          )
 }
 
-function itemUpdate(item) {
+function itemUpdate(item_num) {
+  var item = {    
+    item_name: document.getElementById("item-name-"+item_num).value,
+    description: document.getElementById("description-"+item_num).value,
+    quantity: document.getElementById("quantity-"+item_num).value
+  };
   // Expects item to be a json string
   request({route: '/ItemUpdate',
            item: item,
