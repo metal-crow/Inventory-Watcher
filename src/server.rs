@@ -54,6 +54,7 @@ struct SearchItemRequest {
     item_name_or_description: String,//find any item name OR description that contains this
 }
 fn search_for_item(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
+	println!("search");
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
     let item_request: SearchItemRequest = match json::decode(&payload) {

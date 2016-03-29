@@ -1,11 +1,7 @@
-function updateProgress(e) {
-  console.log(e)
-}
-
 function request(args) {
   // route, params, method, callback
   args.method = args.method || 'POST'
-  args.item = JSON.stringify(args.item)
+  var params = JSON.stringify(args.item)
   var req = new XMLHttpRequest()
   var url = "http://localhost:3000"  // change to location.origin in prod
   req.onreadystatechange = function() {
@@ -14,7 +10,7 @@ function request(args) {
     }
   }
   req.open(args.method, url + args.route)
-  req.send(args.params)
+  req.send(params)
 }
 
 function itemInfo(item) {
@@ -25,14 +21,23 @@ function itemInfo(item) {
            callback: function(e) {
              // Do stuff with what it returns
              console.info(e)
-             if(e.type == "load"){
+             if(e.status == 200){
                console.log('success')
              } else {
-               console.log('error')
+               console.log(e.responseText)
              }
            }
           }
          )
+}
+
+document.querySelector('#search-bar').onkeypress = function(e) {
+  if (!e) e = window.event
+  var keyCode = e.keyCode || e.which
+  if (keyCode == '13'){
+    var query = document.querySelector('#search-bar').value
+    itemSearch(query)
+  }
 }
 
 function itemSearch(item) {
@@ -41,17 +46,31 @@ function itemSearch(item) {
   document.querySelector('#search-bar').disabled = true
   request({route: '/ItemSearch',
            item: {item_name_or_description: item},
-           method: "GET",
            callback: function(e) {
              // Do stuff with what it returns
-             document.querySelector('#search-bar').disabled = false
-             if(e.type == "load"){
-               console.log('success')
-               document.querySelector('item-name').value = e.data.item_name
-               document.querySelector('description').value = e.data.description
-               document.querySelector('quantity').value = e.data.quantity
+             document.querySelector('#search-bar').disabled = false;
+             if(e.status == 200){
+               console.log(e.response);
+               var data = JSON.parse(e.response);
+               //clear parent
+               var list_parent = document.getElementById('found-items');
+			   while(list_parent.hasChildNodes()) {
+				    list_parent.removeChild(list_parent.firstChild);
+			   }
+               //populate parent with data
+               for(var i=0;i<data.length;i++) {
+               		var new_item = document.createElement('div');
+               		new_item.id = "item"+i;
+               		new_item.innerHTML = "\
+               		Name:<input placeholder=\"Item Name\" type=\"text\" id=\"item-name\" value="+data[i].item_name+">\
+    				Description:<input type=\"text\" id=\"description\" value="+data[i].description+">\
+    				Quantity:<input placeholder=\"Quantity\" type=\"text\" id=\"quantity\" value="+data[i].quantity+">\
+    				<button id=\"add-new-item\" value=\"Edit Item\">\
+    				";
+                	list_parent.appendChild(new_item);
+               }
              } else {
-               console.log('error')
+               console.log(e.responseText);
              }
            }
           }
@@ -88,10 +107,10 @@ function itemUpdate(item) {
            item: item,
            callback: function(e) {
              console.log(e)
-             if(e.type == "load"){
+             if(e.status == 200){
                console.log('success')
              } else {
-               console.log('error')
+               console.log(e.responseText)
              }
            }
           }
@@ -101,14 +120,3 @@ function itemUpdate(item) {
 // function itemFind(item) {
 // TODO: This is route is subject to change, so we'll deal with it later
 // }
-
-document.querySelector('#search-bar').onkeypress = function(e) {
-  if (!e) e = window.event
-  var keyCode = e.keyCode || e.which
-  if (keyCode == '13'){
-    var query = document.querySelector('#search-bar').value
-    itemSearch(query)
-  }
-}
-
-
