@@ -8,10 +8,11 @@ function request(args) {
   args.item = JSON.stringify(args.item)
   var req = new XMLHttpRequest()
   var url = "http://localhost:3000"  // change to location.origin in prod
-  req.addEventListener("progress", updateProgress)
-  req.addEventListener("load", args.callback)
-  req.addEventListener("error", args.callback)
-  req.addEventListener("abort", args.callback)
+  req.onreadystatechange = function() {
+    if (req.readyState == XMLHttpRequest.DONE) {
+        args.callback(req)
+    }
+  }
   req.open(args.method, url + args.route)
   req.send(args.params)
 }
@@ -57,16 +58,24 @@ function itemSearch(item) {
          )
 }
 
+document.getElementById("add-new-item").addEventListener('click', function(){
+    itemAdd({
+    item_name: document.getElementById("item-name").value,
+    description: document.getElementById("description").value,
+    quantity: document.getElementById("quantity").value
+    })
+});
+
 function itemAdd(item) {
   // Expects item to be a json string
   request({route: '/ItemAdd',
            item: item,
            callback: function(e) {
              console.log(e)
-             if(e.type == "load"){
+             if(e.status == 200){
                console.log('success')
              } else {
-               console.log('error')
+               console.log(e.responseText)
              }
            }
           }
@@ -101,3 +110,5 @@ document.querySelector('#search-bar').onkeypress = function(e) {
     itemSearch(query)
   }
 }
+
+

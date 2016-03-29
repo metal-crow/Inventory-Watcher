@@ -76,6 +76,7 @@ fn search_for_item(request: &mut Request, database_manager : &DatabaseManager) -
 
 //dont allow any NONE values 
 fn add_item_to_inventory(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
+	println!("add");
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
     let item: Item = match json::decode(&payload) {
@@ -109,7 +110,7 @@ fn update_item_in_inventory(request: &mut Request, database_manager : &DatabaseM
 	}
 }
 
-//query coords from sql (secure) and send to the laser pointer
+//query coords for image from sql and return
 fn find_item_physical(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
@@ -118,7 +119,7 @@ fn find_item_physical(request: &mut Request, database_manager : &DatabaseManager
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
     };
 
-	let selected_item: String = match 
+	let item_coords: String = match 
     database_manager.results_from_database(
     	format!("SELECT * from inventory WHERE item_name='{0}'", request.item_name)
     ) 
@@ -129,10 +130,8 @@ fn find_item_physical(request: &mut Request, database_manager : &DatabaseManager
     	},
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string()))),
     };
-    
-    //laser_control.post(format!("{}/SetLaser",laser_control_ip).as_str()).body(selected_item.as_str()).send().unwrap();    //safe to unwrap b/c we shouldnt get a response
-    
-    Ok(Response::with((status::Ok)))
+        
+    Ok(Response::with((status::Ok,item_coords)))
 }
 
 fn main() {
@@ -157,8 +156,8 @@ fn main() {
 	let mut mount = Mount::new();
 	let mut router = Router::new();
 	//these endpoints serves all the static html/js client view stuff. Then the js queries api endpoints
-	//mount.mount("/", );
-	mount.mount("/public", Static::new(Path::new("E:/Code Workspace/Inventory_Watcher/public")));
+	mount.mount("/", Static::new(Path::new("public/index.html")));
+	mount.mount("/public", Static::new(Path::new("public")));
 	
 	//REST API endpoints
     router.post("/ItemInfo", move |r: &mut Request| get_item_info(r, &database_manager_info));
@@ -167,7 +166,7 @@ fn main() {
     router.post("/ItemUpdate" , move |r: &mut Request| update_item_in_inventory(r, &database_manager_update));
     router.post("/ItemFind" , move |r: &mut Request| find_item_physical(r, &database_manager_find));
 
-	mount.mount("/", router);
+	mount.mount("", router);
     Iron::new(mount).http("localhost:3000").unwrap();
     println!("On 3000");
 }
