@@ -56,6 +56,9 @@ function itemSearch(item) {
     				";
                 	list_parent.appendChild(new_item);
                }
+               if(data.length==0) {
+               		list_parent.innerHTML = "No Items Found";
+               }
              } else {
                console.log(e.responseText);
              }
