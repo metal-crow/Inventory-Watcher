@@ -42,7 +42,6 @@ function itemSearch(item) {
                for(var i=0;i<data.length;i++) {
                		var new_item = document.createElement('div');
                		new_item.id = "item"+i;
-               		console.log(data);
                		new_item.innerHTML = "\
                		Name:<input placeholder=\"Item Name\" type=\"text\" id=\"item-name-"+i+"\" value=\""+data[i].item_name+"\">\
     				Description:<input type=\"text\" id=\"description-"+i+"\" value=\""+data[i].description+"\">\

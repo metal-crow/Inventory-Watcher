@@ -14,7 +14,7 @@ Windows Setup:
 Linux Setup:  
  * Change cargo.toml to only have `mysql="*"`, instead of the other mysql stuff
  * You must install openssl from the package manager, see https://github.com/sfackler/rust-openssl
- * Also dont forget to install gcc 
+ * Also don't forget to install gcc, rust, and an sql database 
  
 ###Features
 Server API (Rust):
