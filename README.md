@@ -18,11 +18,9 @@ Linux Setup:
  
 ###Features
 Server API (Rust):
- * `/ItemInfo`: Request info about item, given primary key
  * `/ItemSearch`: Search for item based on partial name or partial description 
  * `/ItemAdd`: Add item to inventory
  * `/ItemUpdate`: Update item info, given primary key
- * `/ItemFind`: Find item: return photo # and location to highlight from js
  * `/`: Serve client html/js view
  * `/public`: Serve everything in the selected folder as static
  
@@ -34,12 +32,14 @@ Client (Javascript/HTML):
  
 ###SQL Schema
 Item:
- * item_key: u32, auto incremented primary key
- * item_name: String[non-null, unique]  
- * quantity: u32  
- * description: String[non-null, default '']  
- * x_coord: u32  
- * y_coord: u32  
+ * item_key: u64[non-null, unsigned, auto incremented, primary key]
+ * item_name: String(45)[non-null, unique]  
+ * quantity: u32[non-null, unsigned, no default]  
+ * description: String(45)[non-null, default '']  
+ * x_coord: u32[unsigned, default 0]  
+ * y_coord: u32[unsigned, default 0]    
+ * width: u32[unsigned, default 0]    
+ * height: u32[unsigned, default 0]    
   
 ###Settings.ini
 \[MySQL\]:  
@@ -49,5 +49,18 @@ Item:
  * ip\_or\_hostname
  * port
  
-###ToDo 
-behind webauth  
+\[Server\]:
+ * dns_name
+ 
+###Libraries
+Rust:
+ * iron
+ * rustc-serialize
+ * router
+ * rust-ini
+ * staticfile
+ * mount
+ 
+HTML/JS:  
+ * JQuery
+ * ImgAreaSelect

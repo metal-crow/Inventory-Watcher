@@ -3,90 +3,54 @@ extern crate ini;
 
 use mysql::conn::Opts;
 
-//struct in database
 #[derive(Debug, PartialEq, Eq)]
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct Item {
-	item_key: u32,
+	item_key: Option<u64>,
     item_name: String,
-    quantity: Option<u32>,
-    description: Option<String>,
-    x_coord: Option<u32>,
-    y_coord: Option<u32>,
+    quantity: u32,
+    description: String,
+    x_coord: u32,
+    y_coord: u32,
+    width: u32,
+    height: u32,
 }
 
 impl Item {
 	//all possible field names
 	pub fn field_names() -> &'static str {
-		"item_name,quantity,description,x_coord,y_coord"
+		"item_name,quantity,description,x_coord,y_coord,width,height"
 	}
 	
 	//returns comma seperated string of the values of the struct's fields
-	//handle NONEs by not including in string
-	//also return what fields were none(if any), in error
-	pub fn fields(&self) -> Result<String,String> {
-		let mut field_values = String::from(format!("'{}'",self.item_name.as_str()));
-		let mut errors = String::new();
-		
-		match self.quantity {
-			None => errors.push_str("quantity field not found,"),
-			Some(q) => field_values.push_str(format!(",{}",q).as_str()),
-		};
-		match self.description.as_ref() {
-			None => errors.push_str("description field not found,"),
-			Some(d) => field_values.push_str(format!(",'{}'",d).as_str()),
-		};
-		match self.x_coord {
-			None => errors.push_str("x_coord field not found,"),
-			Some(x) => field_values.push_str(format!(",{}",x).as_str()),
-		};
-		match self.y_coord {
-			None => errors.push_str("y_coord field not found,"),
-			Some(y) => field_values.push_str(format!(",{}",y).as_str()),
-		};
-		
-		match errors.as_ref() {
-			"" => return Ok(field_values),
-			_ => return Err(errors)
-		}
+	pub fn fields(&self) -> String {
+		return format!("
+		'{0}',{1},'{2}',{3},{4},{5},{6}",
+		self.item_name.as_str(),
+		self.quantity,
+		self.description.as_str(),
+		self.x_coord,
+		self.y_coord,
+		self.width,
+		self.height);
 	}
 	
 	//returns string in format VARNAME=VARVALUE,...
-	//handle NONEs by not including in string
 	pub fn fields_with_names(&self) -> String {
-		let mut field_names_values = String::from(format!("item_name='{}'",self.item_name.as_str()));
-		match self.quantity {
-			None => {},
-			Some(q) => field_names_values.push_str(format!(",quantity={}",q).as_str()),
-		};
-		match self.description.as_ref() {
-			None => {},
-			Some(d) => field_names_values.push_str(format!(",description='{}'",d).as_str()),
-		};
-		match self.x_coord {
-			None => {},
-			Some(x) => field_names_values.push_str(format!(",x_coord={}",x).as_str()),
-		};
-		match self.y_coord {
-			None => {},
-			Some(y) => field_names_values.push_str(format!(",y_coord={}",y).as_str()),
-		};
-		
-		return field_names_values
+		return format!("
+		item_name='{0}',quantity={1},description='{2}',x_coord={3},y_coord={4},width={5},height={6}",
+		self.item_name.as_str(),
+		self.quantity,
+		self.description.as_str(),
+		self.x_coord,
+		self.y_coord,
+		self.width,
+		self.height);
 	}
 	
-	pub fn get_item_key(&self) -> u32 {
-		self.item_key
+	pub fn get_item_key(&self) -> u64 {
+		self.item_key.unwrap()
 	}
-	
-	pub fn get_item_xcoords(&self) -> u32 {
-		self.x_coord.unwrap()
-	}
-	
-	pub fn get_item_ycoords(&self) -> u32 {
-		self.y_coord.unwrap()
-	}
-
 }
 
 pub struct DatabaseManager{
@@ -107,7 +71,7 @@ impl DatabaseManager {
 	        // will map each `MyResult` to contained `row` (no proper error handling)
 	        // and second call to `map` will map each `row` to `Payment`
 	        result.map(|x| x.unwrap()).map(|row| {
-	            let (item_key,item_name, quantity, description, x_coord, y_coord) = mysql::from_row(row);
+	            let (item_key,item_name, quantity, description, x_coord, y_coord, width, height) = mysql::from_row(row);
 	            Item {
 	            	item_key: item_key,
 	                item_name: item_name,
@@ -115,6 +79,8 @@ impl DatabaseManager {
 	                description: description,
 	                x_coord: x_coord,
 	                y_coord: y_coord,
+	                width: width,
+	                height: height,
 	            }
 	        }).collect() // Collect payments so now `QueryResult` is mapped to `Vec`
 	    });

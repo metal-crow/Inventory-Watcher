@@ -2,7 +2,10 @@
 <html>
   <head>
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-    <script src="js/main.js" defer></script>
+    <script src="public/js/main.js" defer></script>
+    <link rel="stylesheet" type="text/css" href="public/js/css/imgareaselect-default.css" />
+  	<script type="text/javascript" src="public/js/scripts/jquery.min.js"></script>
+  	<script type="text/javascript" src="public/js/scripts/jquery.imgareaselect.pack.js"></script>
   </head>
   <body>
     <input type="text" id="search-bar" placeholder="Search by Name or Description" autofocus>
@@ -14,9 +17,14 @@
     
     </div>
     
+    New Item:
     Name:<input placeholder="Item Name" type="text" id="item-name">
     Description:<input placeholder="Description" type="text" id="description">
     Quantity:<input placeholder="Quantity" type="text" id="quantity">
+	<input style="display: none;" type="number" id="x_coord" value=0>
+	<input style="display: none;" type="number" id="y_coord" value=0>
+	<input style="display: none;" type="number" id="width" value=0>
+	<input style="display: none;" type="number" id="height" value=0>
     <button id="add-new-item">Add New Item</button>
   </body>
 </html>
