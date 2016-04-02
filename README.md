@@ -21,6 +21,7 @@ Server API (Rust):
  * `/ItemSearch`: Search for item based on partial name or partial description 
  * `/ItemAdd`: Add item to inventory
  * `/ItemUpdate`: Update item info, given primary key
+ * `/ItemDelete`: Delete item, given primary key
  * `/`: Serve client html/js view
  * `/public`: Serve everything in the selected folder as static
  

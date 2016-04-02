@@ -52,6 +52,7 @@ function itemSearch(item) {
     				<input style=\"display: none;\" type=\"number\" id=\"height-"+i+"\" value="+data[i].height+">\
     				<button id=\"find-item\" onclick=\"itemFind("+i+")\">Show Item Location</button>\
     				<button id=\"edit-item\" onclick=\"itemUpdate("+i+","+data[i].item_key+")\">Edit Item</button>\
+    				<button id=\"delete-item\" onclick=\"itemDelete("+data[i].item_key+")\">Delete Item</button>\
     				";
                 	list_parent.appendChild(new_item);
                }
@@ -120,6 +121,21 @@ function itemUpdate(item_num,item_key) {
   // Expects item to be a json string
   request({route: '/ItemUpdate',
            item: item,
+           callback: function(e) {
+             console.log(e)
+             if(e.status == 200){
+               console.log('success')
+             } else {
+               console.log(e.responseText)
+             }
+           }
+          }
+         )
+}
+
+function itemDelete(item_key) {
+  request({route: '/ItemDelete',
+           item: {item_key: item_key},
            callback: function(e) {
              console.log(e)
              if(e.status == 200){

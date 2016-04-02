@@ -72,6 +72,24 @@ fn update_item_in_inventory(request: &mut Request, database_manager : &DatabaseM
 	}
 }
 
+#[derive(RustcEncodable, RustcDecodable)]
+struct DeleteItemRequest {
+    item_key: u64,
+}
+fn delete_item_in_inventory(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
+	let mut payload = String::new();
+    request.body.read_to_string(&mut payload).unwrap();
+    let item: DeleteItemRequest = match json::decode(&payload) {
+    	Ok(i) => i,
+    	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
+    };
+
+	match database_manager.alter_database(format!("DELETE from inventory WHERE item_key='{}'", item.item_key)) {
+		None => Ok(Response::with(status::Ok)),
+		Some(err) => Ok(Response::with((status::BadRequest, err.to_string())))
+	}
+}
+
 fn main() {
 	let opts = match dbmanager::get_opts() {
 		Err(err) => panic!("Error reading settings file: {:?}",err),
@@ -89,6 +107,7 @@ fn main() {
 	let database_manager_search = database_manager_info.clone();
 	let database_manager_add = database_manager_info.clone();
 	let database_manager_update = database_manager_info.clone();
+	let database_manager_delete = database_manager_info.clone();
 
 	let mut mount = Mount::new();
 	let mut router = Router::new();
@@ -97,6 +116,7 @@ fn main() {
     router.post("/ItemSearch" , move |r: &mut Request| search_for_item(r, &database_manager_search));
     router.post("/ItemAdd" , move |r: &mut Request| add_item_to_inventory(r, &database_manager_add));
     router.post("/ItemUpdate" , move |r: &mut Request| update_item_in_inventory(r, &database_manager_update));
+    router.post("/ItemDelete" , move |r: &mut Request| delete_item_in_inventory(r, &database_manager_delete));
 
 	//these endpoints serves all the static html/js client view stuff. Then the js queries api endpoints
  	mount.mount("/index", Static::new(Path::new("public/index.html")));
