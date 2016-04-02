@@ -147,7 +147,7 @@ fn main() {
 	
 	let database_manager_info = Arc::new(
 		DatabaseManager {
-			pool: match mysql::Pool::new(opts) {
+			pool: match mysql::Pool::new(opts.0) {
 				Ok(p) => p,
 				Err(_) => panic!("Could not connect to MySQL database (Is the server up? Is your username/password correct?)"),
 			},
@@ -171,6 +171,5 @@ fn main() {
     router.post("/ItemFind" , move |r: &mut Request| find_item_physical(r, &database_manager_find));
 
 	mount.mount("", router);
-    Iron::new(mount).http("localhost:3000").unwrap();
-    println!("On 3000");
+    Iron::new(mount).http(format!("{}:80",opts.1).as_str()).unwrap();
 }

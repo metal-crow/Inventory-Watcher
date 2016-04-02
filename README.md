@@ -13,6 +13,8 @@ Windows Setup:
  
 Linux Setup:  
  * Change cargo.toml to only have `mysql="*"`, instead of the other mysql stuff
+ * You must install openssl from the package manager, see https://github.com/sfackler/rust-openssl
+ * Also dont forget to install gcc 
  
 ###Features
 Server API (Rust):
@@ -33,9 +35,9 @@ Client (Javascript/HTML):
 ###SQL Schema
 Item:
  * item_key: u32, auto incremented primary key
- * item_name: String[non-null, can be empty]  
+ * item_name: String[non-null, unique]  
  * quantity: u32  
- * description: String[non-null, can be empty]  
+ * description: String[non-null, default '']  
  * x_coord: u32  
  * y_coord: u32  
   

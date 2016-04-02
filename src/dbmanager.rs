@@ -132,7 +132,7 @@ impl DatabaseManager {
 }
 
 //read mysql and laser control settings from settings.ini
-pub fn get_opts() -> Result<Opts,String> {
+pub fn get_opts() -> Result<(Opts,String),String> {
 	let conf = match ini::Ini::load_from_file("settings.ini") {
 		Ok(f) => f,
 		Err(_) => return Err("settings.ini file not found".to_string()),
@@ -164,8 +164,17 @@ pub fn get_opts() -> Result<Opts,String> {
 		},
 		None => return Err("port variable not found".to_string()),
 	};
+	let server_settings = match conf.section(Some("Server".to_owned())) {
+		Some(s) => s,
+		None => return Err("Server section not found".to_string()),
+	};
 
-	Ok(
+	let dns_name = match server_settings.get("dns_name") {
+		Some(s) => s,
+		None => return Err("dns_name variable not found".to_string()),
+	};
+
+	Ok((
 		Opts {
 		    user: Some(user.to_string()),
 		    pass: Some(pass.to_string()),
@@ -173,6 +182,7 @@ pub fn get_opts() -> Result<Opts,String> {
 		    ip_or_hostname: Some(ip_or_hostname.to_string()),
 		    tcp_port: port,
 		    ..Default::default()
-		}
-	)
+		},
+		dns_name.to_string()
+	))
 }
