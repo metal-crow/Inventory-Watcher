@@ -68,9 +68,20 @@ function itemSearch(item) {
 }
 
 function itemFind(item_num) {
-	//unhide reserch room image
-	document.getElementById("room_photo").style.visibility = "visible";
-	 
+	//unhide research room image (actually create it to allow click thorugh)
+	var imgs_parent_div = document.getElementById('room_photo_div');
+	
+	var room_photo_img = document.createElement('img');
+	room_photo_img.id = "room_photo";
+	room_photo_img.src = "http://odyniec.net/projects/imgareaselect/bee.jpg"
+	imgs_parent_div.appendChild(room_photo_img);
+	
+	var close_photo_img = document.createElement('img');
+	close_photo_img.id = "close_room_photo";
+	close_photo_img.src = "https://cdn3.iconfinder.com/data/icons/status/100/close_4-512.png"
+	close_photo_img.addEventListener("click", removeItemFind);
+	imgs_parent_div.appendChild(close_photo_img);
+	
 	//load imgAreaSelect
 	var x1 = parseInt(document.getElementById("x_coord-"+item_num).value);
 	var y1 = parseInt(document.getElementById("y_coord-"+item_num).value);
@@ -89,9 +100,12 @@ function itemFind(item_num) {
 }
 
 //when close button clicked, hide research room image
-function itemFindHide() {
-	$('#room_photo').imgAreaSelect({ hide:true });
-	document.getElementById("room_photo").style.visibility = "hidden";
+function removeItemFind() {
+	$('#room_photo').imgAreaSelect({ remove:true });
+	var imgs_parent_div = document.getElementById('room_photo_div');
+	while(imgs_parent_div.hasChildNodes()) {
+		imgs_parent_div.removeChild(imgs_parent_div.firstChild);
+	}
 }
 
 document.getElementById("add-new-item").addEventListener('click', function(){

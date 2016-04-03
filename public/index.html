@@ -7,11 +7,15 @@
   	<script type="text/javascript" src="public/js/scripts/jquery.min.js"></script>
   	<script type="text/javascript" src="public/js/scripts/jquery.imgareaselect.pack.js"></script>
   	<style>
-	#room_photo {
+	#room_photo_div {
 	    position: absolute;
 	    top: 10%;
     	left: 10%;
 	    z-index: 1;
+	}
+	#close_room_photo {
+	    position: absolute;
+	    width: 40px;
 	}
 	</style>
   </head>
@@ -25,7 +29,8 @@
     
     </div>
     
-    <img style="visibility: hidden;" id="room_photo" src="http://odyniec.net/projects/imgareaselect/bee.jpg">
+    <div id="room_photo_div">
+    </div>
     
     </br>
     New Item
