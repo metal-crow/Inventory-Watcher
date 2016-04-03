@@ -69,17 +69,29 @@ function itemSearch(item) {
 
 function itemFind(item_num) {
 	//unhide reserch room image
-	
+	document.getElementById("room_photo").style.visibility = "visible";
+	 
 	//load imgAreaSelect
-	var x1 = document.getElementById("xcoord-"+item_num).value;
-	var y1 = document.getElementById("ycoord-"+item_num).value;
-	var x2 = x1 + document.getElementById("width-"+item_num).value;
-	var y2 = y1 + document.getElementById("height-"+item_num).value;
-	$('#img').imgAreaSelect({ x1: x1, y1: y1, x2: x2, y2: y2 });
-	
-	//for imgAreaSelect, onSelectEnd update the hidden field values
-	
-	//when close button clicked, hide research room image
+	var x1 = parseInt(document.getElementById("x_coord-"+item_num).value);
+	var y1 = parseInt(document.getElementById("y_coord-"+item_num).value);
+	var x2 = parseInt(x1) + parseInt(document.getElementById("width-"+item_num).value);
+	var y2 = parseInt(y1) + parseInt(document.getElementById("height-"+item_num).value);
+	$('#room_photo').imgAreaSelect({ 
+		x1: x1, y1: y1, x2: x2, y2: y2, 
+		handles: true, 
+		onSelectEnd: function (img, selection) {
+	        	document.getElementById("x_coord-"+item_num).value = selection.x1;
+				document.getElementById("y_coord-"+item_num).value = selection.y1;
+				document.getElementById("width-"+item_num).value = selection.width;
+				document.getElementById("height-"+item_num).value = selection.height;
+	    } 
+	});
+}
+
+//when close button clicked, hide research room image
+function itemFindHide() {
+	$('#room_photo').imgAreaSelect({ hide:true });
+	document.getElementById("room_photo").style.visibility = "hidden";
 }
 
 document.getElementById("add-new-item").addEventListener('click', function(){

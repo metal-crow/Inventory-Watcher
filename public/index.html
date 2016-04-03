@@ -6,6 +6,14 @@
     <link rel="stylesheet" type="text/css" href="public/js/css/imgareaselect-default.css" />
   	<script type="text/javascript" src="public/js/scripts/jquery.min.js"></script>
   	<script type="text/javascript" src="public/js/scripts/jquery.imgareaselect.pack.js"></script>
+  	<style>
+	#room_photo {
+	    position: absolute;
+	    top: 10%;
+    	left: 10%;
+	    z-index: 1;
+	}
+	</style>
   </head>
   <body>
     <input type="text" id="search-bar" placeholder="Search by Name or Description" autofocus>
@@ -16,6 +24,8 @@
     <div id="found-items">
     
     </div>
+    
+    <img style="visibility: hidden;" id="room_photo" src="http://odyniec.net/projects/imgareaselect/bee.jpg">
     
     </br>
     New Item
