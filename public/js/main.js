@@ -129,7 +129,7 @@ function itemAdd(item) {
              if(e.status == 200){
                console.log('success')
              } else {
-               console.log(e.responseText)
+               alert(e.responseText)
              }
            }
           }
@@ -155,7 +155,7 @@ function itemUpdate(item_num,item_key) {
              if(e.status == 200){
                console.log('success')
              } else {
-               console.log(e.responseText)
+               alert(e.responseText)
              }
            }
           }
@@ -170,7 +170,7 @@ function itemDelete(item_key) {
              if(e.status == 200){
                console.log('success')
              } else {
-               console.log(e.responseText)
+               alert(e.responseText)
              }
            }
           }
