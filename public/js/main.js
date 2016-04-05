@@ -51,7 +51,7 @@ function itemSearch(item) {
     				<input style=\"display: none;\" type=\"number\" id=\"width-"+i+"\" value="+data[i].width+">\
     				<input style=\"display: none;\" type=\"number\" id=\"height-"+i+"\" value="+data[i].height+">\
     				<button id=\"find-item\" onclick=\"itemFind("+i+")\">Show Item Location</button>\
-    				<button id=\"edit-item\" onclick=\"itemUpdate("+i+","+data[i].item_key+")\">Edit Item</button>\
+    				<button id=\"edit-item\" onclick=\"itemUpdate("+i+","+data[i].item_key+")\">Save Changes</button>\
     				<button id=\"delete-item\" onclick=\"itemDelete("+data[i].item_key+")\">Delete Item</button>\
     				";
                 	list_parent.appendChild(new_item);
