@@ -144,6 +144,9 @@ function itemAdd(item) {
              console.log(e)
              if(e.status == 200){
                console.log('success')
+               document.getElementById("item-name").value = "";
+    		   document.getElementById("description").value = "";
+			   document.getElementById("quantity").value = "";               
              } else {
                alert(e.responseText)
              }
