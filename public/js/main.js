@@ -44,7 +44,7 @@ function itemSearch(item) {
                		new_item.id = "item"+i;
                		new_item.innerHTML = "\
                		Name:<input placeholder=\"Item Name\" type=\"text\" id=\"item-name-"+i+"\" value=\""+data[i].item_name+"\">\
-    				Description:<input type=\"text\" id=\"description-"+i+"\" value=\""+data[i].description+"\">\
+    				Description:<textarea rows=\"2\" cols=\"50\" type=\"text\" id=\"description-"+i+"\">"+data[i].description+"</textarea>\
     				Quantity:<input placeholder=\"Quantity\" type=\"text\" id=\"quantity-"+i+"\" value=\""+data[i].quantity+"\">\
     				<input style=\"display: none;\" type=\"number\" id=\"x_coord-"+i+"\" value="+data[i].x_coord+">\
     				<input style=\"display: none;\" type=\"number\" id=\"y_coord-"+i+"\" value="+data[i].y_coord+">\
@@ -52,6 +52,7 @@ function itemSearch(item) {
     				<input style=\"display: none;\" type=\"number\" id=\"height-"+i+"\" value="+data[i].height+">\
     				<button id=\"find-item\" onclick=\"itemFind("+i+")\">Show Item Location</button>\
     				<button id=\"edit-item\" onclick=\"itemUpdate("+i+","+data[i].item_key+")\">Save Changes</button>\
+    				<button id=\"alert-item\" onclick=\"itemLowAlert("+data[i].item_key+")\">Restock Item</button>\
     				<button id=\"delete-item\" onclick=\"itemDelete("+data[i].item_key+")\">Delete Item</button>\
     				";
                 	list_parent.appendChild(new_item);
@@ -61,6 +62,21 @@ function itemSearch(item) {
                }
              } else {
                console.log(e.responseText);
+             }
+           }
+          }
+         )
+}
+
+function itemLowAlert(item_key){
+	  request({route: '/ItemAlert',
+           item: {item_key : item_key},
+           callback: function(e) {
+             console.log(e)
+             if(e.status == 200){
+               console.log('success')
+             } else {
+               alert(e.responseText)
              }
            }
           }

@@ -22,6 +22,7 @@ Server API (Rust):
  * `/ItemAdd`: Add item to inventory
  * `/ItemUpdate`: Update item info, given primary key
  * `/ItemDelete`: Delete item, given primary key
+ * `/ItemAlert`: Send an email that the given item needs to be restocked
  * `/`: Serve client html/js view
  * `/public`: Serve everything in the selected folder as static
  
@@ -52,6 +53,7 @@ Item:
  
 \[Server\]:
  * dns_name
+ * restock_email
  
 ###Libraries
 Rust:

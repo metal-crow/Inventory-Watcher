@@ -72,14 +72,16 @@ fn update_item_in_inventory(request: &mut Request, database_manager : &DatabaseM
 	}
 }
 
+
+
 #[derive(RustcEncodable, RustcDecodable)]
-struct DeleteItemRequest {
+struct ItemRequest {
     item_key: u64,
 }
 fn delete_item_in_inventory(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
-    let item: DeleteItemRequest = match json::decode(&payload) {
+    let item: ItemRequest = match json::decode(&payload) {
     	Ok(i) => i,
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
     };
@@ -89,6 +91,17 @@ fn delete_item_in_inventory(request: &mut Request, database_manager : &DatabaseM
 		Some(err) => Ok(Response::with((status::BadRequest, err.to_string())))
 	}
 }
+
+/*fn	alert_item_restock(request: &mut Request, database_manager : &DatabaseManager) -> IronResult<Response> {
+	let mut payload = String::new();
+    request.body.read_to_string(&mut payload).unwrap();
+    let item: ItemRequest = match json::decode(&payload) {
+    	Ok(i) => i,
+    	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
+    };
+
+	
+}*/
 
 fn main() {
 	let opts = match dbmanager::get_opts() {
@@ -108,6 +121,7 @@ fn main() {
 	let database_manager_add = database_manager_info.clone();
 	let database_manager_update = database_manager_info.clone();
 	let database_manager_delete = database_manager_info.clone();
+	let database_manager_alert = database_manager_info.clone();
 
 	let mut mount = Mount::new();
 	let mut router = Router::new();
@@ -117,6 +131,7 @@ fn main() {
     router.post("/ItemAdd" , move |r: &mut Request| add_item_to_inventory(r, &database_manager_add));
     router.post("/ItemUpdate" , move |r: &mut Request| update_item_in_inventory(r, &database_manager_update));
     router.post("/ItemDelete" , move |r: &mut Request| delete_item_in_inventory(r, &database_manager_delete));
+    router.post("/ItemAlert" , move |r: &mut Request| delete_item_in_inventory(r, &database_manager_alert));
 
 	//these endpoints serves all the static html/js client view stuff. Then the js queries api endpoints
  	mount.mount("/index", Static::new(Path::new("public/index.html")));
