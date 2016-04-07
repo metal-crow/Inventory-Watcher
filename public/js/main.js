@@ -89,12 +89,12 @@ function itemFind(item_num) {
 	
 	var room_photo_img = document.createElement('img');
 	room_photo_img.id = "room_photo";
-	room_photo_img.src = "http://odyniec.net/projects/imgareaselect/bee.jpg"
+	room_photo_img.src = "/public/research_room.png"
 	imgs_parent_div.appendChild(room_photo_img);
 	
 	var close_photo_img = document.createElement('img');
 	close_photo_img.id = "close_room_photo";
-	close_photo_img.src = "https://cdn3.iconfinder.com/data/icons/status/100/close_4-512.png"
+	close_photo_img.src = "/public/close_icon.png"
 	close_photo_img.addEventListener("click", removeItemFind);
 	imgs_parent_div.appendChild(close_photo_img);
 	
