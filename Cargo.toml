@@ -15,6 +15,7 @@ router = "*"
 rust-ini = "*"
 staticfile = "*"
 mount = "*"
+lettre = "*"
 
 [dependencies.mysql]
 default-features = false

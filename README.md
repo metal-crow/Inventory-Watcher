@@ -1,13 +1,13 @@
 ##CSH Research Room Inventory Watcher
 
 An inventory manager for the CSH research room. Keeps track of parts and their current quantity.  
-Also allows locating parts via an automated laser pointer.  
+Also allows locating parts via an image selection system. and restocking via email notification.  
 Used this as an excuse to learn Rust.  
 
 Windows Setup:  
  * install Rust x64
  * install MSYS2
-  * install mingw-w64-x86_64-gcc, add C:\MSYS64\mingw64\bin to PATH
+  * install mingw-w64-x86_64-gcc, add C:\MSYS64\mingw64\bin to PATH. (also maybe copy gcc.exe and rename it cc.exe because ???)
   * install mingw-w64-x86_64-openssl
  * install MySQL
  
@@ -51,9 +51,14 @@ Item:
  * ip\_or\_hostname
  * port
  
+\[Mail\]:
+ * restock_email
+ * mail_server
+ * mail_username
+ * mail_password
+ 
 \[Server\]:
  * dns_name
- * restock_email
  
 ###Libraries
 Rust:
@@ -63,6 +68,7 @@ Rust:
  * rust-ini
  * staticfile
  * mount
+ * lettre
  
 HTML/JS:  
  * JQuery

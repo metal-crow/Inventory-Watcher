@@ -97,8 +97,23 @@ impl DatabaseManager {
 	}
 }
 
-//read mysql and laser control settings from settings.ini
-pub fn get_opts() -> Result<(Opts,String),String> {
+#[derive(Debug)]
+pub struct EmailSettings {
+	pub restocker_email: String,
+	pub mail_server: String,
+	pub mail_server_port: u16,
+	pub mail_username: String,
+	pub mail_password: String,
+}
+#[derive(Debug)]
+pub struct Settings {
+	pub opts: Opts,
+	pub dns: String,
+	pub email_settings: EmailSettings,
+}
+
+//read settings from settings.ini
+pub fn get_opts() -> Result<Settings,String> {
 	let conf = match ini::Ini::load_from_file("settings.ini") {
 		Ok(f) => f,
 		Err(_) => return Err("settings.ini file not found".to_string()),
@@ -130,6 +145,40 @@ pub fn get_opts() -> Result<(Opts,String),String> {
 		},
 		None => return Err("port variable not found".to_string()),
 	};
+		
+	let email_settings = match conf.section(Some("Email".to_owned())) {
+		Some(s) => s,
+		None => return Err("Email section not found".to_string()),
+	};
+
+	let restocker_email = match email_settings.get("restocker_email") {
+		Some(s) => s,
+		None => return Err("restocker_email variable not found".to_string()),
+	};
+	
+	let mail_server = match email_settings.get("mail_server") {
+		Some(s) => s,
+		None => return Err("mail_server variable not found".to_string()),
+	};
+	
+	let mail_server_port = match email_settings.get("mail_server_port") {
+		Some(s) => match s.parse::<u16>() {
+			Ok(s) => s,
+			Err(_) => return Err("mail_server_port variable not a valid number".to_string()),
+		},
+		None => return Err("mail_server_port variable not found".to_string()),
+	};
+			
+	let mail_username = match email_settings.get("mail_username") {
+		Some(s) => s,
+		None => return Err("mail_username variable not found".to_string()),
+	};
+	
+	let mail_password = match email_settings.get("mail_password") {
+		Some(s) => s,
+		None => return Err("mail_password variable not found".to_string()),
+	};
+			
 	let server_settings = match conf.section(Some("Server".to_owned())) {
 		Some(s) => s,
 		None => return Err("Server section not found".to_string()),
@@ -140,15 +189,24 @@ pub fn get_opts() -> Result<(Opts,String),String> {
 		None => return Err("dns_name variable not found".to_string()),
 	};
 
-	Ok((
-		Opts {
-		    user: Some(user.to_string()),
-		    pass: Some(pass.to_string()),
-		    db_name: Some(db_name.to_string()),
-		    ip_or_hostname: Some(ip_or_hostname.to_string()),
-		    tcp_port: port,
-		    ..Default::default()
-		},
-		dns_name.to_string()
-	))
+	Ok(
+		Settings{
+			opts: Opts {
+			    user: Some(user.to_string()),
+			    pass: Some(pass.to_string()),
+			    db_name: Some(db_name.to_string()),
+			    ip_or_hostname: Some(ip_or_hostname.to_string()),
+			    tcp_port: port,
+			    ..Default::default()
+			},
+			dns: dns_name.to_string(),
+			email_settings: EmailSettings {
+				restocker_email: restocker_email.to_string(),
+				mail_server: mail_server.to_string(),
+				mail_server_port: mail_server_port,
+				mail_username: mail_username.to_string(),
+				mail_password: mail_password.to_string(),
+			}
+		}
+	)
 }
