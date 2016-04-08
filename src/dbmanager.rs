@@ -7,9 +7,9 @@ use mysql::conn::Opts;
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct Item {
 	item_key: Option<u64>,
-    item_name: String,
-    quantity: u32,
-    description: String,
+    pub item_name: String,
+    pub quantity: u32,
+    pub description: String,
     x_coord: u32,
     y_coord: u32,
     width: u32,
@@ -59,20 +59,27 @@ pub struct DatabaseManager{
 
 impl DatabaseManager {
 	//handles querying the database, and returing an array of the results in Item form.
-	pub fn results_from_database(&self, query : String) -> Result<Vec<Item>, mysql::Error> {
+	//since a passed ref has to have a lifetime at a higher level, the results vec must be supplied
+	pub fn results_from_database<'a>(&self, query : String, results: & 'a mut Vec<Item>) -> Option<mysql::Error> {
 		let mut statement = match self.pool.prepare(query) {
 			Ok(s) => s,
-			Err(err) => return Err(err),
+			Err(err) => return Some(err),
 		};
 		
-		let selected_items: Result<Vec<Item>, mysql::Error> = statement.execute(()).map(|result| {
-	    	// In this closure we sill map `QueryResult` to `Vec`
-	        // `QueryResult` is iterator over `MyResult<row, err>` so first call to `map`
-	        // will map each `MyResult` to contained `row` (no proper error handling)
-	        // and second call to `map` will map each `row` to `Payment`
-	        result.map(|x| x.unwrap()).map(|row| {
-	            let (item_key,item_name, quantity, description, x_coord, y_coord, width, height) = mysql::from_row(row);
-	            Item {
+		let row_iterator = match statement.execute(()) {
+			Ok(r) => r,
+			Err(e) => return Some(e)
+		};
+		
+		for row in row_iterator {
+			let row_res = match row {
+				Ok(r) => r,
+				Err(e) =>  return Some(e),
+			};
+			let (item_key,item_name, quantity, description, x_coord, y_coord, width, height) = mysql::from_row(row_res);
+            //push the mapped item onto the passed vec reference
+            results.push(
+            	Item {
 	            	item_key: item_key,
 	                item_name: item_name,
 	                quantity: quantity,
@@ -81,11 +88,11 @@ impl DatabaseManager {
 	                y_coord: y_coord,
 	                width: width,
 	                height: height,
-	            }
-	        }).collect() // Collect payments so now `QueryResult` is mapped to `Vec`
-	    });
-	    
-	    return selected_items
+            	}
+            );
+		}
+		
+		None
 	}
 	
 	//handle inserting into the database or any other action that doesnt return a result, but can error

@@ -36,13 +36,14 @@ fn search_for_item(request: &mut Request, database_manager : &DatabaseManager) -
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
     };
     
-    let selected_items = match 
-    database_manager.results_from_database(
-    	format!("SELECT * from inventory WHERE item_name LIKE '%{0}%' OR description LIKE '%{0}%'", item_request.item_name_or_description)
+    let mut selected_items = Vec::new();
+    match database_manager.results_from_database(
+    	format!("SELECT * from inventory WHERE item_name LIKE '%{0}%' OR description LIKE '%{0}%'", item_request.item_name_or_description),
+    	&mut selected_items
     ) 
     {
-    	Ok(s_i) => s_i,
-    	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
+    	None => {},
+    	Some(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
     };
     
     let payload = json::encode(&selected_items).unwrap();
@@ -98,19 +99,31 @@ fn delete_item_in_inventory(request: &mut Request, database_manager : &DatabaseM
 }
 
 fn alert_item_restock(request: &mut Request, database_manager : &DatabaseManager, email_settings : &EmailSettings) -> IronResult<Response> {
-	println!("restock");
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
     let item: ItemRequest = match json::decode(&payload) {
     	Ok(i) => i,
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
     };
+    
+    let mut selected_item = Vec::new();
+    match database_manager.results_from_database(
+    	format!("SELECT * from inventory WHERE item_key={0}", item.item_key),
+    	&mut selected_item
+    ) 
+    {
+    	None => match selected_item.len() {
+    		1 => {},
+    		_ => return Ok(Response::with((status::InternalServerError, "Too many results found (more that 1 item has the same primay key. Your MySQL schema is incorrect)".to_string())))
+    	},
+    	Some(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
+    };
 
 	let email = EmailBuilder::new()
                     .to(email_settings.restocker_email.as_str())
                     .from("no-reply@InventoryManager")
-                    .body("Hello World!")
-                    .subject("Needs Restocking!")
+                    .body(format!("There are currently {} {} left in stock, and a user requested we get more.\nDescription: {}",selected_item[0].quantity, selected_item[0].item_name, selected_item[0].description).as_str())
+                    .subject(format!("{} needs restocking",selected_item[0].item_name).as_str())
                     .build()
                     .unwrap();
 	// Connect to a remote server on a custom port
@@ -128,14 +141,15 @@ fn alert_item_restock(request: &mut Request, database_manager : &DatabaseManager
     .authentication_mechanisms(vec![Mechanism::CramMd5])
     // Enable connection reuse
     .connection_reuse(true).build();
-	println!("connected");
 
-	let result_1 = mailer.send(email);
-	println!("{:?}",result_1.is_ok());
+	let result = mailer.send(email);
+	mailer.close();// Explicitely close the SMTP transaction as we enabled connection reuse
 	
-	mailer.close();
-	
-	Ok(Response::with((status::Ok)))
+	if result.is_ok() {
+		Ok(Response::with((status::Ok)))
+	} else {
+		Ok(Response::with((status::InternalServerError, format!("Unable to send email because {}",result.unwrap_err()))))
+	}
 }
 
 fn main() {
