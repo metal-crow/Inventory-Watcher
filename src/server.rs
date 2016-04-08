@@ -126,6 +126,7 @@ fn alert_item_restock(request: &mut Request, database_manager : &DatabaseManager
                     .subject(format!("{} needs restocking",selected_item[0].item_name).as_str())
                     .build()
                     .unwrap();
+    //TODO can i build this on startup and pass ref to method?
 	// Connect to a remote server on a custom port
 	let mut mailer = SmtpTransportBuilder::new((email_settings.mail_server.as_str(),email_settings.mail_server_port)).unwrap()
     // Set the name sent during EHLO/HELO, default is `localhost`
