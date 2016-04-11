@@ -7,21 +7,19 @@ extern crate mount;
 extern crate lettre;
 
 mod dbmanager;
+mod restock_manager;
 
-use dbmanager::{DatabaseManager, Item, EmailSettings};
+use dbmanager::{DatabaseManager, Item};
+use restock_manager::{RestockingManager};
 use iron::prelude::*;
 use iron::status;
 use router::Router;
 use std::io::Read;
 use rustc_serialize::json;
-use std::sync::Arc;
+use std::sync::{Arc};
 use std::path::Path;
 use staticfile::Static;
 use mount::Mount;
-use lettre::email::EmailBuilder;
-use lettre::transport::smtp::{SecurityLevel, SmtpTransportBuilder};
-use lettre::transport::smtp::authentication::Mechanism;
-use lettre::transport::EmailTransport;
 
 //json request format for search_for_item
 #[derive(RustcEncodable, RustcDecodable)]
@@ -98,7 +96,7 @@ fn delete_item_in_inventory(request: &mut Request, database_manager : &DatabaseM
 	}
 }
 
-fn alert_item_restock(request: &mut Request, database_manager : &DatabaseManager, email_settings : &EmailSettings) -> IronResult<Response> {
+fn alert_item_restock(request: &mut Request, restocking_manager : &RestockingManager) -> IronResult<Response> {
 	let mut payload = String::new();
     request.body.read_to_string(&mut payload).unwrap();
     let item: ItemRequest = match json::decode(&payload) {
@@ -106,54 +104,14 @@ fn alert_item_restock(request: &mut Request, database_manager : &DatabaseManager
     	Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
     };
     
-    let mut selected_item = Vec::new();
-    match database_manager.results_from_database(
-    	format!("SELECT * from inventory WHERE item_key={0}", item.item_key),
-    	&mut selected_item
-    ) 
-    {
-    	None => match selected_item.len() {
-    		1 => {},
-    		_ => return Ok(Response::with((status::InternalServerError, "Too many results found (more that 1 item has the same primay key. Your MySQL schema is incorrect)".to_string())))
-    	},
-    	Some(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
-    };
-
-	let email = EmailBuilder::new()
-                    .to(email_settings.restocker_email.as_str())
-                    .from("no-reply@InventoryManager")
-                    .body(format!("There are currently {} {} left in stock, and a user requested we get more.\nDescription: {}",selected_item[0].quantity, selected_item[0].item_name, selected_item[0].description).as_str())
-                    .subject(format!("{} needs restocking",selected_item[0].item_name).as_str())
-                    .build()
-                    .unwrap();
-    //TODO can i build this on startup and pass ref to method?
-	// Connect to a remote server on a custom port
-	let mut mailer = SmtpTransportBuilder::new((email_settings.mail_server.as_str(),email_settings.mail_server_port)).unwrap()
-    // Set the name sent during EHLO/HELO, default is `localhost`
-    .hello_name("my.hostname.tld")
-    // Add credentials for authentication
-    .credentials(email_settings.mail_username.as_str(), email_settings.mail_password.as_str())
-    // Specify a TLS security level. You can also specify an SslContext with
-    // .ssl_context(SslContext::Ssl23)
-    .security_level(SecurityLevel::AlwaysEncrypt)
-    // Enable SMTPUTF8 is the server supports it
-    .smtp_utf8(true)
-    // Configure accepted authetication mechanisms
-    .authentication_mechanisms(vec![Mechanism::CramMd5])
-    // Enable connection reuse
-    .connection_reuse(true).build();
-
-	let result = mailer.send(email);
-	mailer.close();// Explicitely close the SMTP transaction as we enabled connection reuse
-	
-	if result.is_ok() {
-		Ok(Response::with((status::Ok)))
-	} else {
-		Ok(Response::with((status::InternalServerError, format!("Unable to send email because {}",result.unwrap_err()))))
-	}
+    match restocking_manager.add_item_for_restocking(item.item_key) {
+    	Some(e) => return Ok(Response::with((status::InternalServerError, e.to_string()))),
+    	None => return Ok(Response::with((status::Ok)))
+    }
 }
 
 fn main() {
+	//load settings file
 	let settings = match dbmanager::get_opts() {
 		Err(err) => panic!("Error reading settings file: {:?}",err),
 		Ok(o) => o,
@@ -161,9 +119,11 @@ fn main() {
 	println!("{:?}",settings);
 	
 	let settings_opts = settings.opts;
+	let restocking_settings_opts = settings_opts.clone();
 	let settings_email = settings.email_settings;
 	let settings_dns = settings.dns;
 	
+	//database and manager for parts inventory
 	let database_manager_info = Arc::new(
 		DatabaseManager {
 			pool: match mysql::Pool::new(settings_opts) {
@@ -175,8 +135,17 @@ fn main() {
 	let database_manager_add = database_manager_info.clone();
 	let database_manager_update = database_manager_info.clone();
 	let database_manager_delete = database_manager_info.clone();
-	let database_manager_alert = database_manager_info.clone();
-
+	
+	//database and manager for restocking/email alerts
+	let restocking_database = DatabaseManager {
+		pool: match mysql::Pool::new(restocking_settings_opts) {
+			Ok(p) => p,
+			Err(_) => panic!("Could not connect to MySQL database (Is the server up? Is your username/password correct?)"),
+		},
+	};
+	let restocking_manager = RestockingManager::new_restock_manager(restocking_database,settings_email).unwrap();
+	
+	//controller for API
 	let mut mount = Mount::new();
 	let mut router = Router::new();
 	
@@ -185,7 +154,7 @@ fn main() {
     router.post("/ItemAdd" , move |r: &mut Request| add_item_to_inventory(r, &database_manager_add));
     router.post("/ItemUpdate" , move |r: &mut Request| update_item_in_inventory(r, &database_manager_update));
     router.post("/ItemDelete" , move |r: &mut Request| delete_item_in_inventory(r, &database_manager_delete));
-    router.post("/ItemAlert" , move |r: &mut Request| alert_item_restock(r, &database_manager_alert, &settings_email));
+    router.post("/ItemAlert" , move |r: &mut Request| alert_item_restock(r, &restocking_manager));
 
 	//these endpoints serves all the static html/js client view stuff. Then the js queries api endpoints
  	mount.mount("/index", Static::new(Path::new("public/index.html")));

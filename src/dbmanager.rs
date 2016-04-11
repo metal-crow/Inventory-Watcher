@@ -6,7 +6,7 @@ use mysql::conn::Opts;
 #[derive(Debug, PartialEq, Eq)]
 #[derive(RustcEncodable, RustcDecodable)]
 pub struct Item {
-	item_key: Option<u64>,
+	pub item_key: Option<u64>,
     pub item_name: String,
     pub quantity: u32,
     pub description: String,
@@ -141,6 +141,14 @@ pub fn get_opts() -> Result<Settings,String> {
 		Some(s) => s,
 		None => return Err("database_name variable not found".to_string()),
 	};
+	/*let inventory_table_name = match mysql_settings.get("inventory_table_name") {
+		Some(s) => s,
+		None => return Err("inventory_table_name variable not found".to_string()),
+	};
+	let restocking_table_name = match mysql_settings.get("restocking_table_name") {
+		Some(s) => s,
+		None => return Err("restocking_table_name variable not found".to_string()),
+	};*/
 	let ip_or_hostname = match mysql_settings.get("ip_or_hostname") {
 		Some(s) => s,
 		None => return Err("ip_or_hostname variable not found".to_string()),
