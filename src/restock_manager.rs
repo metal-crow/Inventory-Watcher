@@ -66,8 +66,8 @@ impl RestockingManager {
 	    .connection_reuse(true).build();
 		    
 		loop {
+			//get the time from now till next friday, 5pm
 			let mut alert_restock_time = time::now();
-			println!("now: {:?}",alert_restock_time);
 			alert_restock_time = match alert_restock_time.tm_wday<=5 && alert_restock_time.tm_hour<17 {
 				true => alert_restock_time + self::time::Duration::days(5 - alert_restock_time.tm_wday as i64),
 				false => alert_restock_time + self::time::Duration::days(6),//saturday, 6 days to friday
@@ -75,13 +75,10 @@ impl RestockingManager {
 			alert_restock_time.tm_hour = 17;//5pm
 			alert_restock_time.tm_min = 0;//start of 5pm
 			
-			println!("then:{:?}",alert_restock_time);
 			let time_to_wait = Duration::new((alert_restock_time - time::now()).num_seconds().abs() as u64,0);
-			println!("{:?}",time_to_wait);
 			
+			//sleep until then
 			sleep(time_to_wait);
-			
-			println!("woke");
 			
 			let mut items_to_restock: Vec<Item> = Vec::new();
 			//query that gets all item_keys in the restocking table, then selects those items from the inventory table
@@ -94,8 +91,8 @@ impl RestockingManager {
 		    
 		    let mut email_body = String::from(format!("We have {} requests for item restocks:\n",items_to_restock.len()));
 		    for item in items_to_restock {
-		    	email_body.push_str(format!("\t* There are currently {} {} left in stock, and a user requested we get more.\n
-		    							    \t\t Description: {}\n",item.quantity, item.item_name, item.description).as_str());
+		    	email_body.push_str(format!("\t* There are currently {} {} left in stock, and a user requested we get more.\
+		    							     \t\t Description: {}\n",item.quantity, item.item_name, item.description).as_str());
 		    }
 		
 			let email = EmailBuilder::new()
