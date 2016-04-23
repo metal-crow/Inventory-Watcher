@@ -1,7 +1,7 @@
 extern crate mysql;
 extern crate ini;
 
-use mysql::conn::Opts;
+use mysql::conn::{Opts,OptsBuilder};
 
 #[derive(Debug, PartialEq, Eq)]
 #[derive(RustcEncodable, RustcDecodable)]
@@ -204,16 +204,16 @@ pub fn get_opts() -> Result<Settings,String> {
 		None => return Err("dns_name variable not found".to_string()),
 	};
 
+	let mut opts_builder = OptsBuilder::default();
+	opts_builder.user(Some(user.to_string()))
+				.pass(Some(pass.to_string()))
+				.db_name(Some(db_name.to_string()))
+				.ip_or_hostname(Some(ip_or_hostname.to_string()))
+				.tcp_port(port);
+				
 	Ok(
 		Settings{
-			opts: Opts {
-			    user: Some(user.to_string()),
-			    pass: Some(pass.to_string()),
-			    db_name: Some(db_name.to_string()),
-			    ip_or_hostname: Some(ip_or_hostname.to_string()),
-			    tcp_port: port,
-			    ..Default::default()
-			},
+			opts: opts_builder.into(),
 			dns: dns_name.to_string(),
 			email_settings: EmailSettings {
 				restocker_email: restocker_email.to_string(),

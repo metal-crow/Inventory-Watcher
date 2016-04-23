@@ -1,7 +1,15 @@
 extern crate mysql;
+extern crate time;
+extern crate lettre;
 
-use dbmanager::{DatabaseManager, EmailSettings};
+use lettre::email::EmailBuilder;
+use lettre::transport::smtp::{SecurityLevel,SmtpTransportBuilder};
+use lettre::transport::smtp::authentication::Mechanism;
+use lettre::transport::EmailTransport;
+use dbmanager::{DatabaseManager, EmailSettings, Item};
 use std::thread;
+use std::thread::sleep;
+use std::time::Duration;
 use std::sync::{Arc};
 
 pub struct RestockingManager {
@@ -41,35 +49,12 @@ impl RestockingManager {
 	//run inside a thread. Checks if its time to send the email, then sleeps the thread till it needs to send.
 	//sending the email removes all items from the restocking list, and inserts them into the email
 	pub fn send_restocking_email(&self){
-		println!("hi");
-		/*
-		let mut selected_item = Vec::new();
-	    match database_manager.results_from_database(
-	    	format!("SELECT * from inventory WHERE item_key={0}", item.item_key),
-	    	&mut selected_item
-	    ) 
-	    {
-	    	None => match selected_item.len() {
-	    		1 => {},
-	    		_ => return Ok(Response::with((status::InternalServerError, "Too many results found (more that 1 item has the same primay key. Your MySQL schema is incorrect)".to_string())))
-	    	},
-	    	Some(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
-	    };
-	
-		let email = EmailBuilder::new()
-	                    .to(email_settings.restocker_email.as_str())
-	                    .from("no-reply@InventoryManager")
-	                    .body(format!("There are currently {} {} left in stock, and a user requested we get more.\nDescription: {}",selected_item[0].quantity, selected_item[0].item_name, selected_item[0].description).as_str())
-	                    .subject(format!("{} needs restocking",selected_item[0].item_name).as_str())
-	                    .build()
-	                    .unwrap();
-	    //TODO can i build this on startup and pass ref to method?
 		// Connect to a remote server on a custom port
-		let mut mailer = SmtpTransportBuilder::new((email_settings.mail_server.as_str(),email_settings.mail_server_port)).unwrap()
+		let mut mailer = SmtpTransportBuilder::new((self.email_settings.mail_server.as_str(),self.email_settings.mail_server_port)).unwrap()
 	    // Set the name sent during EHLO/HELO, default is `localhost`
 	    .hello_name("my.hostname.tld")
 	    // Add credentials for authentication
-	    .credentials(email_settings.mail_username.as_str(), email_settings.mail_password.as_str())
+	    .credentials(self.email_settings.mail_username.as_str(), self.email_settings.mail_password.as_str())
 	    // Specify a TLS security level. You can also specify an SslContext with
 	    // .ssl_context(SslContext::Ssl23)
 	    .security_level(SecurityLevel::AlwaysEncrypt)
@@ -79,9 +64,48 @@ impl RestockingManager {
 	    .authentication_mechanisms(vec![Mechanism::CramMd5])
 	    // Enable connection reuse
 	    .connection_reuse(true).build();
-	
-		let result = mailer.send(email);
-		mailer.close();// Explicitely close the SMTP transaction as we enabled connection reuse*/
+		    
+		loop {
+			//get the time from now till next friday, 5pm
+			let mut alert_restock_time = time::now();
+			alert_restock_time = match alert_restock_time.tm_wday<=5 && alert_restock_time.tm_hour<17 {
+				true => alert_restock_time + self::time::Duration::days(5 - alert_restock_time.tm_wday as i64),
+				false => alert_restock_time + self::time::Duration::days(6),//saturday, 6 days to friday
+			};
+			alert_restock_time.tm_hour = 17;//5pm
+			alert_restock_time.tm_min = 0;//start of 5pm
+			
+			let time_to_wait = Duration::new((alert_restock_time - time::now()).num_seconds().abs() as u64,0);
+			
+			//sleep until then
+			sleep(time_to_wait);
+			
+			let mut items_to_restock: Vec<Item> = Vec::new();
+			//query that gets all item_keys in the restocking table, then selects those items from the inventory table
+		    match self.restocking_database.results_from_database(
+		    	format!("SELECT restocking.item_key,{0} FROM restocking, inventory where restocking.item_key=inventory.item_key",Item::field_names()),&mut items_to_restock) 
+		    {
+		    	None => {},
+		    	Some(err) => { println!("Error accessing database in restocking thread: {:?}",err); continue;}//some error, report and restart thread
+		    };
+		    
+		    let mut email_body = String::from(format!("We have {} requests for item restocks:\n",items_to_restock.len()));
+		    for item in items_to_restock {
+		    	email_body.push_str(format!("\t* {0} {1} ({2}) left in stock.\n",item.quantity, item.item_name, item.description).as_str());
+		    }
 		
+			let email = EmailBuilder::new()
+		                    .to(self.email_settings.restocker_email.as_str())
+		                    .from("no-reply@InventoryManager")
+		                    .body(email_body.as_str())
+		                    .subject("Weekly restocking report")
+		                    .build()
+		                    .unwrap();			
+		
+			let result = mailer.send(email);
+			println!("{:?}",result);
+			
+			self.restocking_database.alter_database(format!("truncate restocking"));
+		}	
 	}
 }

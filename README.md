@@ -15,7 +15,9 @@ Linux Setup:
  * Change cargo.toml to only have `mysql="*"`, instead of the other mysql stuff
  * You must install openssl from the package manager, see https://github.com/sfackler/rust-openssl
  * Also don't forget to install gcc, rust, and an sql database 
- 
+  
+Finally, fill out the settings in `settings.ini` and put your dns name in `main.js`.
+  
 ###Features
 Server API (Rust):
  * `/ItemSearch`: Search for item based on partial name or partial description 
