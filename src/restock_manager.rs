@@ -91,8 +91,7 @@ impl RestockingManager {
 		    
 		    let mut email_body = String::from(format!("We have {} requests for item restocks:\n",items_to_restock.len()));
 		    for item in items_to_restock {
-		    	email_body.push_str(format!("\t* There are currently {} {} left in stock, and a user requested we get more.\
-		    							     \t\t Description: {}\n",item.quantity, item.item_name, item.description).as_str());
+		    	email_body.push_str(format!("\t* {0} {1} ({2}) left in stock.\n",item.quantity, item.item_name, item.description).as_str());
 		    }
 		
 			let email = EmailBuilder::new()
@@ -106,8 +105,7 @@ impl RestockingManager {
 			let result = mailer.send(email);
 			println!("{:?}",result);
 			
-			self.restocking_database.alter_database(format!("DELETE FROM restocking WHERE item_key=*"));
-			//mailer.close();// Explicitely close the SMTP transaction as we enabled connection reuse	
+			self.restocking_database.alter_database(format!("truncate restocking"));
 		}	
 	}
 }
