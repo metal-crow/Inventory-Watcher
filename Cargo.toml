@@ -16,6 +16,7 @@ rust-ini = "*"
 staticfile = "*"
 mount = "*"
 lettre = "*"
+time = "*"
 
 [dependencies.mysql]
 default-features = false
