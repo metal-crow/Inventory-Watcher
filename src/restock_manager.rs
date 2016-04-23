@@ -84,11 +84,12 @@ impl RestockingManager {
 			println!("woke");
 			
 			let mut items_to_restock: Vec<Item> = Vec::new();
-			//todo this has to get a vec of item_keys, then for each key get the item from inventory
-		    match self.restocking_database.results_from_database(format!("SELECT * from restocking"),&mut items_to_restock) 
+			//query that gets all item_keys in the restocking table, then selects those items from the inventory table
+		    match self.restocking_database.results_from_database(
+		    	format!("SELECT * FROM test.restocking as to_restock join test.inventory as item on to_restock.item_key=item.item_key"),&mut items_to_restock) 
 		    {
 		    	None => {},
-		    	Some(err) => { println!("Error accessing restocking database: {:?}",err); continue;}//some error, report and restart thread
+		    	Some(err) => { println!("Error accessing database in restocking thread: {:?}",err); continue;}//some error, report and restart thread
 		    };
 		    
 		    let mut email_body = String::from(format!("We have {} requests for item restocks:\n",items_to_restock.len()));
