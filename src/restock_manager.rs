@@ -86,7 +86,7 @@ impl RestockingManager {
 			let mut items_to_restock: Vec<Item> = Vec::new();
 			//query that gets all item_keys in the restocking table, then selects those items from the inventory table
 		    match self.restocking_database.results_from_database(
-		    	format!("SELECT * FROM test.restocking as to_restock join test.inventory as item on to_restock.item_key=item.item_key"),&mut items_to_restock) 
+		    	format!("SELECT * FROM restocking as to_restock join inventory as item on to_restock.item_key=item.item_key"),&mut items_to_restock) 
 		    {
 		    	None => {},
 		    	Some(err) => { println!("Error accessing database in restocking thread: {:?}",err); continue;}//some error, report and restart thread
