@@ -74,8 +74,9 @@ impl RestockingManager {
 			};
 			alert_restock_time.tm_hour = 17;//5pm
 			alert_restock_time.tm_min = 0;//start of 5pm
+			alert_restock_time.tm_sec = 0;
 			
-			let time_to_wait = Duration::new((alert_restock_time - time::now()).num_seconds().abs() as u64,0);
+			let time_to_wait = Duration::new((alert_restock_time - time::now()).num_seconds().abs()+10 as u64,0);
 			
 			//sleep until then
 			sleep(time_to_wait);
