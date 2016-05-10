@@ -76,7 +76,7 @@ impl RestockingManager {
 			alert_restock_time.tm_min = 0;//start of 5pm
 			alert_restock_time.tm_sec = 0;
 			
-			let time_to_wait = Duration::new(((alert_restock_time - time::now()).num_seconds().abs()+10) as u64,0);
+			let time_to_wait = Duration::new(((alert_restock_time - time::now()).num_seconds().abs()+61) as u64,0);
 			
 			//sleep until then
 			sleep(time_to_wait);
@@ -90,23 +90,25 @@ impl RestockingManager {
 		    	Some(err) => { println!("Error accessing database in restocking thread: {:?}",err); continue;}//some error, report and restart thread
 		    };
 		    
-		    let mut email_body = String::from(format!("We have {} requests for item restocks:\n",items_to_restock.len()));
-		    for item in items_to_restock {
-		    	email_body.push_str(format!("\t* {0} {1} ({2}) left in stock.\n",item.quantity, item.item_name, item.description).as_str());
-		    }
-		
-			let email = EmailBuilder::new()
-		                    .to(self.email_settings.restocker_email.as_str())
-		                    .from("no-reply@InventoryManager")
-		                    .body(email_body.as_str())
-		                    .subject("Weekly restocking report")
-		                    .build()
-		                    .unwrap();			
-		
-			let result = mailer.send(email);
-			println!("{:?}",result);
+		    if items_to_restock.len() > 0 {
+			    let mut email_body = String::from(format!("We have {} requests for item restocks:\n",items_to_restock.len()));
+			    for item in items_to_restock {
+			    	email_body.push_str(format!("\t* {0} {1} ({2}) left in stock.\n",item.quantity, item.item_name, item.description).as_str());
+			    }
 			
-			self.restocking_database.alter_database(format!("truncate restocking"));
+				let email = EmailBuilder::new()
+			                    .to(self.email_settings.restocker_email.as_str())
+			                    .from("no-reply@InventoryManager")
+			                    .body(email_body.as_str())
+			                    .subject("Weekly restocking report")
+			                    .build()
+			                    .unwrap();			
+			
+				let result = mailer.send(email);
+				println!("{:?}",result);
+				
+				self.restocking_database.alter_database(format!("truncate restocking"));
+		    }
 		}	
 	}
 }
